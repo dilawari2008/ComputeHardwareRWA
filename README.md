@@ -14,10 +14,11 @@ Starts over with handing out the tokens to the NFT owner after locking up the NF
 The NFT owner can then sell their tokens on the open market or on the contract itself.
 Buyers need to pay a 2% fee to the contract.
 The contract allows for rent payment.
-The contract represents a DAO of the token holders.
-The DAO can vote on the following:
+The contract represents a DAO (RWADao) of the token holders.
+The RWADao can vote on the following:
 - Rent payment
 - Commission fee for the RWA DAO
+- Can vote to remove a certain listing from the platform or not
 60% Vote Share is required for decisions to be made.
 The token holders get share of the rent payment.
 The NFT gets unlocked when the DAO decides with a 100% vote.
@@ -25,6 +26,7 @@ Everything is orchestrated by the Marketplace DAO which includes the following:
 - Create an RWA DAO to govern the RWA
 - Decide upon the commission fee for the RWA DAO (e.g. 2% of the rent payment)
 - Since the Marketplace DAO is the owner of every RWA DAO contract, the commissions from rent paying and withdrawals, selling fo the RWA, selling tokens, etc. shall be withdrawn by the Marketplace DAO
+- MarketplaceDAO can vote upon whether to remove a certain listing from the platform or not
 
 There are 4 contracts:
 - RWA NFT
