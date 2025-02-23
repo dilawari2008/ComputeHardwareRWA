@@ -10,6 +10,7 @@ contract RWADao is Ownable {
     RWAToken public immutable TOKEN_CONTRACT;
     uint256 public tokenPrice;
     uint256 public rentalPrice;
+    uint256 public constant PERCENTAGE_DECIMALS = 10000;
     uint256 public constant FEE_PERCENTAGE = 300; // 3%
     uint256 public constant RENTAL_FEE_PERCENTAGE = 200; // 2%
     uint256 public constant VOTE_THRESHOLD = 6000; // 60%
@@ -93,7 +94,7 @@ contract RWADao is Ownable {
         require(currentTenant == address(0), "Property already rented");
         require(msg.value == rentalPrice, "Incorrect rent amount");
         
-        uint256 daoFee = (msg.value * RENTAL_FEE_PERCENTAGE) / 10000;
+        uint256 daoFee = (msg.value * RENTAL_FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
         uint256 rentToDistribute = msg.value - daoFee;
         
         currentTenant = msg.sender;
@@ -113,7 +114,7 @@ contract RWADao is Ownable {
         require(msg.sender == currentTenant, "Not the current tenant");
         require(msg.value == rentalPrice, "Incorrect rent amount");
         
-        uint256 daoFee = (msg.value * RENTAL_FEE_PERCENTAGE) / 10000;
+        uint256 daoFee = (msg.value * RENTAL_FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
         uint256 rentToDistribute = msg.value - daoFee;
         
         _distributeRent(rentToDistribute);
@@ -139,7 +140,7 @@ contract RWADao is Ownable {
         require(!currentProposal.hasVoted[msg.sender], "Already voted");
         require(TOKEN_CONTRACT.balanceOf(msg.sender) > 0, "Not a token holder");
         
-        uint256 voterWeight = (TOKEN_CONTRACT.balanceOf(msg.sender) * 10000) / TOKEN_CONTRACT.totalSupply();
+        uint256 voterWeight = (TOKEN_CONTRACT.balanceOf(msg.sender) * PERCENTAGE_DECIMALS) / TOKEN_CONTRACT.totalSupply(); // fix it
         
         if (inFavor) {
             currentProposal.votesFor += voterWeight;
@@ -157,7 +158,7 @@ contract RWADao is Ownable {
         if (currentProposal.votesFor >= VOTE_THRESHOLD) {
             rentalPrice = currentProposal.proposedPrice;
             _resetProposal(true);
-        } else if (currentProposal.votesAgainst > (10000 - VOTE_THRESHOLD)) {
+        } else if (currentProposal.votesAgainst > (PERCENTAGE_DECIMALS - VOTE_THRESHOLD)) { // fix it
             _resetProposal(false);
         }
     }
@@ -178,7 +179,7 @@ contract RWADao is Ownable {
             address holder = holders[i];
             uint256 holderBalance = TOKEN_CONTRACT.balanceOf(holder);
             uint256 holderShare = (amount * holderBalance) / totalSupply;
-            uint256 holderFee = (holderShare * FEE_PERCENTAGE) / 10000;
+            uint256 holderFee = (holderShare * FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
             uint256 finalAmount = holderShare - holderFee;
             
             payable(holder).transfer(finalAmount);
@@ -228,7 +229,7 @@ contract RWADao is Ownable {
                 uint256 buyAmount = remainingToBuy > sale.amount ? sale.amount : remainingToBuy;
                 
                 uint256 payment = buyAmount * tokenPrice;
-                uint256 fee = (payment * FEE_PERCENTAGE) / 10000;
+                uint256 fee = (payment * FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
                 uint256 sellerPayment = payment - fee;
                 
                 require(TOKEN_CONTRACT.transferFrom(sale.seller, msg.sender, buyAmount), "Token transfer failed");

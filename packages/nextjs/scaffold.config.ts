@@ -32,6 +32,10 @@ const scaffoldConfig = {
 
   // Only show the Burner Wallet when running on hardhat network
   onlyLocalBurnerWallet: true,
+
+  // Prevent auto-connecting to MetaMask
+  // @ts-ignore
+  walletAutoConnect: true,
 } as const satisfies ScaffoldConfig;
 
 export default scaffoldConfig;

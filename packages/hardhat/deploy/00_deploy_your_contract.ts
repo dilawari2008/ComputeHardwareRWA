@@ -11,8 +11,8 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   const tokenName = "RWAToken";
   const tokenSymbol = "RWTK";
   const initialSupply = "1000";
-  const initialTokenPrice = "100000000000000000";
-  const initialRentalPrice = "50000000000000000";
+  const initialTokenPrice = "10000000000000000"; // 0.01 ETH
+  const initialRentalPrice = "20000000000000000"; // 0.02 ETH
   const initialOwnerAddress = deployer;
 
   // Deploy RWADao

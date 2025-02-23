@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RWAToken is ERC20, Ownable {
+    // Override decimals to return 0
+    uint8 private constant _decimals = 0;
+
     // Mapping for instant holder verification (acts as a set)
     mapping(address => bool) private isActiveHolder;
     
@@ -19,6 +22,10 @@ contract RWAToken is ERC20, Ownable {
         string memory symbol,
         uint256 initialSupply
     ) ERC20(name, symbol) Ownable(msg.sender) {
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return _decimals;
     }
 
     function mint(uint256 amount) public onlyOwner {
