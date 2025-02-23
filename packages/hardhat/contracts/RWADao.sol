@@ -10,11 +10,13 @@ contract RWADao is Ownable {
     RWAToken public immutable TOKEN_CONTRACT;
     uint256 public tokenPrice;
     uint256 public rentalPrice;
-    uint256 public constant PERCENTAGE_DECIMALS = 10000;
-    uint256 public constant FEE_PERCENTAGE = 300; // 3%
-    uint256 public constant RENTAL_FEE_PERCENTAGE = 200; // 2%
-    uint256 public constant VOTE_THRESHOLD = 6000; // 60%
     address public currentTenant;
+
+    // the following shall be decided upon by the MarketplaceDAO
+    uint256 public immutable PERCENTAGE_DECIMALS;
+    uint256 public immutable FEE_PERCENTAGE;
+    uint256 public immutable RENTAL_FEE_PERCENTAGE;
+    uint256 public immutable VOTE_THRESHOLD;
     
     struct ApprovedSale {
         address seller;
@@ -54,7 +56,12 @@ contract RWADao is Ownable {
         uint256 initialSupply,
         uint256 initialTokenPrice,
         uint256 initialRentalPrice,
-        address initialOwnerAddress
+        address initialOwnerAddress,
+        // the following shall be decided upon by the MarketplaceDAO
+        uint256 initialPercentageDecimals,
+        uint256 initialFeePercentage,
+        uint256 initialRentalFeePercentage,
+        uint256 initialVoteThreshold
     ) Ownable(msg.sender) {
         require(initialOwnerAddress != address(0), "Invalid initial owner address");
         require(initialTokenPrice > 0, "Price must be greater than 0");
@@ -68,6 +75,11 @@ contract RWADao is Ownable {
         
         tokenPrice = initialTokenPrice;
         rentalPrice = initialRentalPrice;
+        // the following shall be decided upon by the MarketplaceDAO
+        PERCENTAGE_DECIMALS = initialPercentageDecimals;
+        FEE_PERCENTAGE = initialFeePercentage;
+        RENTAL_FEE_PERCENTAGE = initialRentalFeePercentage;
+        VOTE_THRESHOLD = initialVoteThreshold;
         emit DaoCreated(address(NFT_CONTRACT), address(TOKEN_CONTRACT));
     }
 
