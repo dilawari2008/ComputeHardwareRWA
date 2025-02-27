@@ -2,10 +2,6 @@
 
 import { useState } from "react";
 import { parseEther } from "viem";
-import { Button } from "~~/marketplace/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "~~/marketplace/ui/dialog";
-import { Input } from "~~/marketplace/ui/input";
-import { Label } from "~~/marketplace/ui/label";
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -53,108 +49,152 @@ const CreateListingModal: React.FC<CreateListingModalProps> = ({ isOpen, onClose
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Create New Compute Listing</DialogTitle>
-        </DialogHeader>
+    <div
+      className={`z-[5] bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center ${
+        !isOpen && "hidden"
+      }`}
+    >
+      <div className="flex flex-col bg-base-100">
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className="text-base-content hover:text-base-content/80 transition duration-150 ease-in-out"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="nftName">NFT Name</Label>
-            <Input
-              id="nftName"
-              name="nftName"
-              placeholder="Compute NFT"
-              value={formData.nftName}
-              onChange={handleChange}
-              required
-            />
+        <div>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-base-content">Create New Compute Listing</h2>
           </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="nftSymbol">NFT Symbol</Label>
-            <Input
-              id="nftSymbol"
-              name="nftSymbol"
-              placeholder="CNFT"
-              value={formData.nftSymbol}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="tokenName">Token Name</Label>
-            <Input
-              id="tokenName"
-              name="tokenName"
-              placeholder="Compute Token"
-              value={formData.tokenName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="tokenSymbol">Token Symbol</Label>
-            <Input
-              id="tokenSymbol"
-              name="tokenSymbol"
-              placeholder="CTKN"
-              value={formData.tokenSymbol}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="initialSupply">Initial Supply (ETH)</Label>
-            <Input
-              id="initialSupply"
-              name="initialSupply"
-              placeholder="1000"
-              value={formData.initialSupply}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="initialTokenPrice">Initial Token Price (ETH)</Label>
-            <Input
-              id="initialTokenPrice"
-              name="initialTokenPrice"
-              placeholder="0.01"
-              value={formData.initialTokenPrice}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="initialRentalPrice">Initial Rental Price (ETH)</Label>
-            <Input
-              id="initialRentalPrice"
-              name="initialRentalPrice"
-              placeholder="0.5"
-              value={formData.initialRentalPrice}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Listing"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          <form onSubmit={handleSubmit} className="space-y-1">
+            <div className="space-y-2">
+              <label htmlFor="nftName" className="block text-sm font-medium text-base-content">
+                NFT Name
+              </label>
+              <input
+                type="text"
+                name="nftName"
+                id="nftName"
+                className="mt-1 block w-full rounded-md border-black border-2 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.nftName}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="nftSymbol" className="block text-sm font-medium text-base-content">
+                NFT Symbol
+              </label>
+              <input
+                type="text"
+                name="nftSymbol"
+                id="nftSymbol"
+                className="mt-1 block w-full rounded-md border-black border-2 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.nftSymbol}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="tokenName" className="block text-sm font-medium text-base-content">
+                Token Name
+              </label>
+              <input
+                type="text"
+                name="tokenName"
+                id="tokenName"
+                className="mt-1 block w-full rounded-md border-black border-2 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.tokenName}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="tokenSymbol" className="block text-sm font-medium text-base-content">
+                Token Symbol
+              </label>
+              <input
+                type="text"
+                name="tokenSymbol"
+                id="tokenSymbol"
+                className="mt-1 block w-full rounded-md border-black border-2 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.tokenSymbol}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="initialSupply" className="block text-sm font-medium text-base-content">
+                Initial Supply (ETH)
+              </label>
+              <input
+                type="text"
+                name="initialSupply"
+                id="initialSupply"
+                className="mt-1 block w-full rounded-md border-black border-2 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.initialSupply}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="initialTokenPrice" className="block text-sm font-medium text-base-content">
+                Initial Token Price (ETH)
+              </label>
+              <input
+                type="text"
+                name="initialTokenPrice"
+                id="initialTokenPrice"
+                className="mt-1 block w-full rounded-md border-black border-2 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.initialTokenPrice}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="initialRentalPrice" className="block text-sm font-medium text-base-content">
+                Initial Rental Price (ETH)
+              </label>
+              <input
+                type="text"
+                name="initialRentalPrice"
+                id="initialRentalPrice"
+                className="mt-1 block w-full rounded-md border-black border-2 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.initialRentalPrice}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-base-content bg-base-200 rounded hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-base-300 focus:ring-offset-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="px-4 py-2 text-base-content bg-primary rounded hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              >
+                {isLoading ? "Creating..." : "Create Listing"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 
