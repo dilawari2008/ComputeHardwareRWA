@@ -30,18 +30,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 const Listing = () => {
   const { address, isConnected } = useAccount();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -207,9 +195,9 @@ const Listing = () => {
                       {listing?.error ? (
                         "Error"
                       ) : listing?.isRented ? (
-                        <span className="text-red-500 font-medium">Rented</span>
+                        <span className="text-black font-medium">Rented</span>
                       ) : (
-                        <span className="text-green-500 font-medium">Available</span>
+                        <span className="text-black font-medium">Available</span>
                       )}
                     </TableCell>
                     <TableCell>

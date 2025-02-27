@@ -3,16 +3,7 @@
 // import { useState } from "react";
 // import { useAccount, useContractWrite, useTransaction } from "wagmi";
 // import { RWADAO_ABI } from "~~/marketplace/contracts/contractsInfo";
-import { Button } from "~~/marketplace/ui/button";
-import { Card, CardContent } from "~~/marketplace/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~~/marketplace/ui/dialog";
+import React from "react";
 
 interface ListingDetailsModalProps {
   isOpen: boolean;
@@ -28,8 +19,15 @@ interface ListingDetailsModalProps {
   };
 }
 const ListingDetailsModal = ({ isOpen, onClose, listing }: ListingDetailsModalProps) => {
+  console.log("isOpen", isOpen);
+  console.log("listing", listing);
   // const { address } = useAccount();
   // const [isRenting, setIsRenting] = useState(false);
+
+  // Add useEffect to log when props change
+  React.useEffect(() => {
+    console.log("Modal props changed - isOpen:", isOpen);
+  }, [isOpen, listing]);
 
   // Format ETH values for display
   const formatEth = (value: string) => {
@@ -72,66 +70,77 @@ const ListingDetailsModal = ({ isOpen, onClose, listing }: ListingDetailsModalPr
     return null;
   }
 
+  // Use a direct rendering approach for Dialog
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Compute Asset Details</DialogTitle>
-          <DialogDescription>View details and rent this compute asset</DialogDescription>
-        </DialogHeader>
+    <>
+      {isOpen && (
+        <div
+          className="z-[5] bg-opacity-60 overflow-hidden h-screen w-full flex items-center justify-center"
+          id="my-modal"
+          onClick={onClose}
+        >
+          <div
+            className="p-4 max-w-sm bg-white shadow-lg rounded-md border-2 border-black text-black transform"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-end mb-2">
+              <button
+                className="text-black hover:text-gray-700 w-6 h-6 flex items-center justify-center"
+                onClick={onClose}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <h2 className="text-lg font-semibold text-black">Compute Asset Details</h2>
+              <p className="mt-2 text-sm text-gray-800">View details and rent this compute asset</p>
+              <div className="mt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="font-semibold text-black">DAO Address:</div>
+                  <div className="font-mono break-all text-black">{listing.daoAddress}</div>
 
-        <div className="grid gap-4 py-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="font-semibold">DAO Address:</div>
-                <div className="font-mono break-all">{listing.daoAddress}</div>
+                  <div className="font-semibold text-black">NFT Contract:</div>
+                  <div className="font-mono break-all text-black">{listing.nftContract}</div>
 
-                <div className="font-semibold">NFT Contract:</div>
-                <div className="font-mono break-all">{listing.nftContract}</div>
+                  <div className="font-semibold text-black">Token Contract:</div>
+                  <div className="font-mono break-all text-black">{listing.tokenContract}</div>
 
-                <div className="font-semibold">Token Contract:</div>
-                <div className="font-mono break-all">{listing.tokenContract}</div>
+                  <div className="font-semibold text-black">Token Price:</div>
+                  <div className="text-black">{formatEth(listing.tokenPrice)} ETH</div>
 
-                <div className="font-semibold">Token Price:</div>
-                <div>{formatEth(listing.tokenPrice)} ETH</div>
+                  <div className="font-semibold text-black">Rental Price:</div>
+                  <div className="text-black">{formatEth(listing.rentalPrice)} ETH</div>
 
-                <div className="font-semibold">Rental Price:</div>
-                <div>{formatEth(listing.rentalPrice)} ETH</div>
+                  <div className="font-semibold text-black">Status:</div>
+                  <div>
+                    {listing.isRented ? (
+                      <span className="text-red-500">Currently Rented</span>
+                    ) : (
+                      <span className="text-green-500">Available for Rent</span>
+                    )}
+                  </div>
 
-                <div className="font-semibold">Status:</div>
-                <div>
-                  {listing.isRented ? (
-                    <span className="text-red-500">Currently Rented</span>
-                  ) : (
-                    <span className="text-green-500">Available for Rent</span>
+                  {listing.isRented && (
+                    <>
+                      <div className="font-semibold text-black">Current Tenant:</div>
+                      <div className="font-mono break-all text-black">{listing.currentTenant}</div>
+                    </>
                   )}
                 </div>
-
-                {listing.isRented && (
-                  <>
-                    <div className="font-semibold">Current Tenant:</div>
-                    <div className="font-mono break-all">{listing.currentTenant}</div>
-                  </>
-                )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
-
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Close
-          </Button>
-
-          {/* {!listing.isRented && (
-            <Button onClick={handleRent} disabled={isRenting || isRentingPending || isRentWaiting || !address}>
-              {isRentingPending || isRentWaiting ? "Processing..." : `Rent It (${formatEth(listing.rentalPrice)} ETH)`}
-            </Button>
-          )} */}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      )}
+    </>
   );
 };
 
