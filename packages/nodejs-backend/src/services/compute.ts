@@ -8,23 +8,6 @@ import FormData from "form-data";
 import Config from "@/config";
 import fs from "fs";
 
-const pinata = new PinataSDK({
-  pinataJwt: Config.pinata.jwt,
-  pinataGateway: Config.pinata.gateway,
-});
-
-// Fix 1: Use the correct Blob/File format
-const convertMulterFileToFile = (multerFile: Express.Multer.File) => {
-  const fileBuffer = fs.readFileSync(multerFile.path);
-  // Return as a File-like object with the required properties
-  return {
-    name: multerFile.originalname,
-    buffer: fileBuffer,
-    size: multerFile.size,
-    type: multerFile.mimetype
-  };
-};
-
 // Fix 2: Use Axios directly for reliable uploads
 const uploadToPinata = async (file: Express.Multer.File) => {
   try {
