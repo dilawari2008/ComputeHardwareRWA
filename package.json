@@ -42,15 +42,17 @@
     "next:serve": "yarn workspace @se-2/nextjs serve",
     "postinstall": "husky",
     "precommit": "lint-staged",
-    "start": "yarn workspace @se-2/nextjs dev && yarn workspace @se-2/nodejs-backend start",
+    "start": "concurrently \"yarn workspace @se-2/nextjs dev\" \"yarn workspace @se-2/nodejs-backend start\"",
     "test": "yarn hardhat:test",
     "vercel": "yarn workspace @se-2/nextjs vercel",
     "vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
     "vercel:login": "yarn workspace @se-2/nextjs vercel:login",
-    "verify": "yarn hardhat:verify"
+    "next:dev": "yarn workspace @se-2/nextjs dev",
+    "backend:start": "yarn workspace @se-2/nodejs-backend start"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10"
   },
