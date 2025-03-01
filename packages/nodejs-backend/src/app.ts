@@ -15,7 +15,7 @@ import { nanoid } from 'nanoid';
 config({ path: '.env.dev' });
 // config({ path: '.env' });
 
-const port = process.env.PORT || '3001';
+const port = process.env.PORT || '3000';
 const app = express();
 
 // Adds various HTTP headers to enhance security by protecting against well-known web vulnerabilities
