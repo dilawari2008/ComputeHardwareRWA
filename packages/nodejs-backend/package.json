@@ -1,5 +1,5 @@
 {
-  "name": "node-typescript-express-boilerplate",
+  "name": "@se-2/nodejs-backend",
   "version": "1.0.20",
   "description": "Lightweight boilerplate for Express Apps with typescript",
   "main": "src/app.ts",
