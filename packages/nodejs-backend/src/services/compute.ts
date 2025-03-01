@@ -13,30 +13,45 @@ const pinata = new PinataSDK({
   pinataGateway: Config.pinata.gateway,
 });
 
+// Fix 1: Use the correct Blob/File format
 const convertMulterFileToFile = (multerFile: Express.Multer.File) => {
-  LOGGER.info(
-    `Converting multer file to regular file: ${multerFile.originalname}`
-  );
   const fileBuffer = fs.readFileSync(multerFile.path);
-  LOGGER.info(`Read file buffer for ${multerFile.originalname}`);
-  const blob = new Blob([fileBuffer], { type: multerFile.mimetype });
-  LOGGER.info(`Created blob for ${multerFile.originalname}`);
-
-  return blob;
+  // Return as a File-like object with the required properties
+  return {
+    name: multerFile.originalname,
+    buffer: fileBuffer,
+    size: multerFile.size,
+    type: multerFile.mimetype
+  };
 };
 
+// Fix 2: Use Axios directly for reliable uploads
 const uploadToPinata = async (file: Express.Multer.File) => {
   try {
-    // Upload to Pinata
-    // @ts-ignore
-    const result = await pinata.upload.file(convertMulterFileToFile(file));
-
-    // Clean up - delete temp file after upload
+    const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+    const data = new FormData();
+    
+    // Append file as a readable stream
+    data.append('file', fs.createReadStream(file.path), {
+      filename: file.originalname,
+      contentType: file.mimetype
+    });
+    
+    const response = await axios.post(url, data, {
+      maxContentLength: Infinity,
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${(data as any)._boundary}`,
+        'Authorization': `Bearer ${Config.pinata.jwt}`
+      }
+    });
+    
+    // Clean up
     fs.unlinkSync(file.path);
-
-    // Return the IPFS hash and gateway URL
+    
+    // Return standard gateway URL instead of custom gateway
     return {
-      pinataUrl: `https://${Config.pinata.gateway}/ipfs/${result.cid}`,
+      pinataUrl: `https://gateway.pinata.cloud/ipfs/${response.data.IpfsHash}`,
+      customGatewayUrl: `https://${Config.pinata.gateway}/ipfs/${response.data.IpfsHash}`
     };
   } catch (error) {
     console.error("Error uploading to Pinata:", error);
