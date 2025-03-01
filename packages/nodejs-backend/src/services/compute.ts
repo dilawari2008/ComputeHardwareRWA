@@ -11,30 +11,32 @@ import fs from "fs";
 // Fix 2: Use Axios directly for reliable uploads
 const uploadToPinata = async (file: Express.Multer.File) => {
   try {
-    const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+    const url = "https://api.pinata.cloud/pinning/pinFileToIPFS";
     const data = new FormData();
-    
+
     // Append file as a readable stream
-    data.append('file', fs.createReadStream(file.path), {
+    data.append("file", fs.createReadStream(file.path), {
       filename: file.originalname,
-      contentType: file.mimetype
+      contentType: file.mimetype,
     });
-    
+
     const response = await axios.post(url, data, {
       maxContentLength: Infinity,
       headers: {
-        'Content-Type': `multipart/form-data; boundary=${(data as any)._boundary}`,
-        'Authorization': `Bearer ${Config.pinata.jwt}`
-      }
+        "Content-Type": `multipart/form-data; boundary=${
+          (data as any)._boundary
+        }`,
+        Authorization: `Bearer ${Config.pinata.jwt}`,
+      },
     });
-    
+
     // Clean up
     fs.unlinkSync(file.path);
-    
+
     // Return standard gateway URL instead of custom gateway
     return {
       pinataUrl: `https://gateway.pinata.cloud/ipfs/${response.data.IpfsHash}`,
-      customGatewayUrl: `https://${Config.pinata.gateway}/ipfs/${response.data.IpfsHash}`
+      customGatewayUrl: `https://${Config.pinata.gateway}/ipfs/${response.data.IpfsHash}`,
     };
   } catch (error) {
     console.error("Error uploading to Pinata:", error);

@@ -17,7 +17,7 @@ contract RWADao is Ownable {
     uint256 public immutable FEE_PERCENTAGE;
     uint256 public immutable RENTAL_FEE_PERCENTAGE;
     uint256 public immutable VOTE_THRESHOLD;
-    
+
     struct ApprovedSale {
         address seller;
         uint256 amount;
@@ -53,6 +53,7 @@ contract RWADao is Ownable {
         string memory nftSymbol,
         string memory tokenName,
         string memory tokenSymbol,
+        string memory metadataUrl,
         uint256 initialSupply,
         uint256 initialTokenPrice,
         uint256 initialRentalPrice,
@@ -69,10 +70,10 @@ contract RWADao is Ownable {
         require(initialRentalPrice > 0, "Rental price must be greater than 0");
 
         NFT_CONTRACT = new RWANft(nftName, nftSymbol);
-        NFT_CONTRACT.mintDefaultNft();
+        NFT_CONTRACT.mintNft(metadataUrl);
         TOKEN_CONTRACT = new RWAToken(tokenName, tokenSymbol, 0);
         TOKEN_CONTRACT.mintToAddress(initialOwnerAddress, initialSupply);
-        
+
         tokenPrice = initialTokenPrice;
         rentalPrice = initialRentalPrice;
         // the following shall be decided upon by the MarketplaceDAO
@@ -85,33 +86,33 @@ contract RWADao is Ownable {
 
     function unlockNFT() external {
         uint256 totalSupply = TOKEN_CONTRACT.totalSupply();
-        
+
         // Check if sender has all tokens
         require(TOKEN_CONTRACT.balanceOf(msg.sender) == totalSupply, "Must own all tokens");
-        
+
         // Transfer tokens to contract
         require(TOKEN_CONTRACT.transferFrom(msg.sender, address(this), totalSupply), "Transfer failed");
-        
+
         // Get NFT from current owner (should be initial owner/DAO creator)
         address nftOwner = NFT_CONTRACT.ownerOf(0);
         NFT_CONTRACT.transferFrom(nftOwner, msg.sender, 0);
-        
+
         // Burn all tokens - first need to add burn function to RWAToken
         TOKEN_CONTRACT.burn(totalSupply);
-        
+
         emit NFTUnlocked(msg.sender);
     }
 
     function becomeTenant() external payable {
         require(currentTenant == address(0), "Property already rented");
         require(msg.value == rentalPrice, "Incorrect rent amount");
-        
+
         uint256 daoFee = (msg.value * RENTAL_FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
         uint256 rentToDistribute = msg.value - daoFee;
-        
+
         currentTenant = msg.sender;
         _distributeRent(rentToDistribute);
-        
+
         emit TenantChanged(address(0), msg.sender);
         emit RentPaid(msg.sender, msg.value);
     }
@@ -125,10 +126,10 @@ contract RWADao is Ownable {
     function payRent() external payable {
         require(msg.sender == currentTenant, "Not the current tenant");
         require(msg.value == rentalPrice, "Incorrect rent amount");
-        
+
         uint256 daoFee = (msg.value * RENTAL_FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
         uint256 rentToDistribute = msg.value - daoFee;
-        
+
         _distributeRent(rentToDistribute);
         emit RentPaid(msg.sender, msg.value);
     }
@@ -137,13 +138,13 @@ contract RWADao is Ownable {
         require(!currentProposal.isActive, "Active proposal exists");
         require(TOKEN_CONTRACT.balanceOf(msg.sender) > 0, "Not a token holder");
         require(newRentalPrice > 0, "Invalid rental price");
-        
+
         currentProposal.proposedPrice = newRentalPrice;
         currentProposal.isActive = true;
         currentProposal.votesFor = 0;
         currentProposal.votesAgainst = 0;
         currentProposal.timestamp = block.timestamp;
-        
+
         emit RentProposalCreated(msg.sender, newRentalPrice);
     }
 
@@ -151,18 +152,19 @@ contract RWADao is Ownable {
         require(currentProposal.isActive, "No active proposal");
         require(!currentProposal.hasVoted[msg.sender], "Already voted");
         require(TOKEN_CONTRACT.balanceOf(msg.sender) > 0, "Not a token holder");
-        
-        uint256 voterWeight = (TOKEN_CONTRACT.balanceOf(msg.sender) * PERCENTAGE_DECIMALS) / TOKEN_CONTRACT.totalSupply(); // fix it
-        
+
+        uint256 voterWeight = (TOKEN_CONTRACT.balanceOf(msg.sender) * PERCENTAGE_DECIMALS) /
+            TOKEN_CONTRACT.totalSupply(); // fix it
+
         if (inFavor) {
             currentProposal.votesFor += voterWeight;
         } else {
             currentProposal.votesAgainst += voterWeight;
         }
-        
+
         currentProposal.hasVoted[msg.sender] = true;
         emit VoteCast(msg.sender, inFavor, voterWeight);
-        
+
         _checkAndFinalizeVote();
     }
 
@@ -170,7 +172,8 @@ contract RWADao is Ownable {
         if (currentProposal.votesFor >= VOTE_THRESHOLD) {
             rentalPrice = currentProposal.proposedPrice;
             _resetProposal(true);
-        } else if (currentProposal.votesAgainst > (PERCENTAGE_DECIMALS - VOTE_THRESHOLD)) { // fix it
+        } else if (currentProposal.votesAgainst > (PERCENTAGE_DECIMALS - VOTE_THRESHOLD)) {
+            // fix it
             _resetProposal(false);
         }
     }
@@ -186,14 +189,14 @@ contract RWADao is Ownable {
     function _distributeRent(uint256 amount) private {
         address[] memory holders = TOKEN_CONTRACT.getHolders();
         uint256 totalSupply = TOKEN_CONTRACT.totalSupply();
-        
+
         for (uint256 i = 0; i < holders.length; i++) {
             address holder = holders[i];
             uint256 holderBalance = TOKEN_CONTRACT.balanceOf(holder);
             uint256 holderShare = (amount * holderBalance) / totalSupply;
             uint256 holderFee = (holderShare * FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
             uint256 finalAmount = holderShare - holderFee;
-            
+
             payable(holder).transfer(finalAmount);
             emit RentDistributed(holder, finalAmount);
         }
@@ -202,27 +205,26 @@ contract RWADao is Ownable {
     function approveTokensForSale(uint256 amount) external {
         require(amount > 0, "Amount must be greater than 0");
         require(TOKEN_CONTRACT.balanceOf(msg.sender) >= amount, "Insufficient balance");
-        
+
         uint256 currentlyQueued = sellerToAvailableTokens[msg.sender];
         uint256 totalAfterRequest = currentlyQueued + amount;
         uint256 approved = TOKEN_CONTRACT.allowance(msg.sender, address(this));
-        
-        require(totalAfterRequest <= approved, 
-            string(abi.encodePacked(
-                "Total would exceed approval. Currently queued: ",
-                toString(currentlyQueued),
-                ", Requested: ",
-                toString(amount),
-                ", Total approval: ",
-                toString(approved)
-            ))
+
+        require(
+            totalAfterRequest <= approved,
+            string(
+                abi.encodePacked(
+                    "Total would exceed approval. Currently queued: ",
+                    toString(currentlyQueued),
+                    ", Requested: ",
+                    toString(amount),
+                    ", Total approval: ",
+                    toString(approved)
+                )
+            )
         );
-   
-        approvedSales.push(ApprovedSale({
-            seller: msg.sender,
-            amount: amount,
-            timestamp: block.timestamp
-        }));
+
+        approvedSales.push(ApprovedSale({ seller: msg.sender, amount: amount, timestamp: block.timestamp }));
 
         sellerToAvailableTokens[msg.sender] += amount;
         emit TokensApprovedForSale(msg.sender, amount);
@@ -231,32 +233,32 @@ contract RWADao is Ownable {
     function buyTokens(uint256 amount) external payable {
         require(amount > 0, "Amount must be greater than 0");
         require(msg.value == amount * tokenPrice, "Incorrect payment amount");
-        
+
         uint256 remainingToBuy = amount;
         uint256 i = 0;
-        
+
         while (remainingToBuy > 0 && i < approvedSales.length) {
             ApprovedSale storage sale = approvedSales[i];
             if (sale.amount > 0) {
                 uint256 buyAmount = remainingToBuy > sale.amount ? sale.amount : remainingToBuy;
-                
+
                 uint256 payment = buyAmount * tokenPrice;
                 uint256 fee = (payment * FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
                 uint256 sellerPayment = payment - fee;
-                
+
                 require(TOKEN_CONTRACT.transferFrom(sale.seller, msg.sender, buyAmount), "Token transfer failed");
-                
+
                 payable(sale.seller).transfer(sellerPayment);
-                
+
                 sale.amount -= buyAmount;
                 sellerToAvailableTokens[sale.seller] -= buyAmount;
                 remainingToBuy -= buyAmount;
-                
+
                 emit TokensPurchased(sale.seller, msg.sender, buyAmount, buyAmount * tokenPrice);
             }
             i++;
         }
-        
+
         require(remainingToBuy == 0, "Not enough tokens available");
         _cleanupEmptySales();
     }

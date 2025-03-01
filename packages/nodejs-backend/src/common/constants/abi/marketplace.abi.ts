@@ -35,6 +35,12 @@ export const MARKETPLACE_ABI = [
         name: "daoAddress",
         type: "address",
       },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "creator",
+        type: "address",
+      },
     ],
     name: "ListingCreated",
     type: "event",
@@ -146,6 +152,11 @@ export const MARKETPLACE_ABI = [
         type: "string",
       },
       {
+        internalType: "string",
+        name: "metadataUrl",
+        type: "string",
+      },
+      {
         internalType: "uint256",
         name: "initialSupply",
         type: "uint256",
@@ -174,6 +185,90 @@ export const MARKETPLACE_ABI = [
   },
   {
     inputs: [],
+    name: "getListingCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "daoAddress",
+        type: "address",
+      },
+    ],
+    name: "getListingDetails",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "daoAddress",
+            type: "address",
+          },
+          {
+            internalType: "string",
+            name: "nftName",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "nftSymbol",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "tokenName",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "tokenSymbol",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "metadataUrl",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "initialSupply",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "initialTokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "initialRentalPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "creator",
+            type: "address",
+          },
+        ],
+        internalType: "struct RWAMarketplaceDao.Listing",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "getListings",
     outputs: [
       {
@@ -198,6 +293,51 @@ export const MARKETPLACE_ABI = [
       {
         internalType: "address",
         name: "daoAddress",
+        type: "address",
+      },
+      {
+        internalType: "string",
+        name: "nftName",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "nftSymbol",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "tokenName",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "tokenSymbol",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "metadataUrl",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "initialSupply",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "initialTokenPrice",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "initialRentalPrice",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "creator",
         type: "address",
       },
     ],

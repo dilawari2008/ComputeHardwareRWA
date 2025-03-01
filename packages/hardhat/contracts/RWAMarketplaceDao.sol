@@ -13,12 +13,21 @@ contract RWAMarketplaceDao is Ownable {
 
     struct Listing {
         address daoAddress;
+        string nftName;
+        string nftSymbol;
+        string tokenName;
+        string tokenSymbol;
+        string metadataUrl;
+        uint256 initialSupply;
+        uint256 initialTokenPrice;
+        uint256 initialRentalPrice;
+        address creator;
     }
 
     Listing[] public listings;
     mapping(address => bool) public registeredDaos;
 
-    event ListingCreated(address indexed daoAddress);
+    event ListingCreated(address indexed daoAddress, address indexed creator);
     event ListingRemoved(address indexed daoAddress);
 
     constructor() Ownable(msg.sender) {}
@@ -28,6 +37,7 @@ contract RWAMarketplaceDao is Ownable {
         string memory nftSymbol,
         string memory tokenName,
         string memory tokenSymbol,
+        string memory metadataUrl,
         uint256 initialSupply,
         uint256 initialTokenPrice,
         uint256 initialRentalPrice
@@ -38,6 +48,7 @@ contract RWAMarketplaceDao is Ownable {
             nftSymbol,
             tokenName,
             tokenSymbol,
+            metadataUrl,
             initialSupply,
             initialTokenPrice,
             initialRentalPrice,
@@ -48,12 +59,24 @@ contract RWAMarketplaceDao is Ownable {
             VOTE_THRESHOLD
         );
 
-        // Add to listings
-        listings.push(Listing({ daoAddress: address(newDao) }));
+        // Add to listings with all the information
+        Listing memory newListing = Listing({
+            daoAddress: address(newDao),
+            nftName: nftName,
+            nftSymbol: nftSymbol,
+            tokenName: tokenName,
+            tokenSymbol: tokenSymbol,
+            metadataUrl: metadataUrl,
+            initialSupply: initialSupply,
+            initialTokenPrice: initialTokenPrice,
+            initialRentalPrice: initialRentalPrice,
+            creator: msg.sender
+        });
 
+        listings.push(newListing);
         registeredDaos[address(newDao)] = true;
 
-        emit ListingCreated(address(newDao));
+        emit ListingCreated(address(newDao), msg.sender);
 
         return address(newDao);
     }
@@ -84,5 +107,21 @@ contract RWAMarketplaceDao is Ownable {
         }
 
         return daoAddresses;
+    }
+
+    function getListingDetails(address daoAddress) external view returns (Listing memory) {
+        require(registeredDaos[daoAddress], "DAO not registered");
+
+        for (uint i = 0; i < listings.length; i++) {
+            if (listings[i].daoAddress == daoAddress) {
+                return listings[i];
+            }
+        }
+
+        revert("Listing not found");
+    }
+
+    function getListingCount() external view returns (uint256) {
+        return listings.length;
     }
 }
