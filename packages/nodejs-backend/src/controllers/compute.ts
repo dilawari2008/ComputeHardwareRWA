@@ -20,8 +20,22 @@ const uploadToPinata = async (req: Request, res: Response) => {
   }
 };
 
+const createListing = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.createListing(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    console.error("Error in createListing controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
+  createListing,
 };
 
 export default ComputeController;

@@ -1,6 +1,5 @@
-import Environments from "@/common/constants/environments";
 import { config } from "dotenv";
-
+import EChain from "@/common/chain.enum";
 config({ path: ".env.dev" });
 
 const Config = {
@@ -9,21 +8,22 @@ const Config = {
       url: process.env.MONGO_URL || "",
     },
   },
+  environment: process.env.ENVIRONMENT || "",
   jwtSecret: process.env.JWT_SECRET || "",
-  environment: process.env.ENV || Environments.development,
   rpcUrl: {
-    hardhat: "http://127.0.0.1:8545",
-    scrollSepolia: "https://sepolia-rpc.scroll.io",
+    [EChain.hardhat]: "http://127.0.0.1:8545",
+    [EChain.scrollSepolia]: "https://sepolia-rpc.scroll.io",
   },
   contractAddress: {
-    hardhat: {
-      marketplace: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    [EChain.hardhat]: {
+      marketplace: process.env.MARKETPLACE_ADDRESS_HARDHAT || "",
     },
-    scrollSepolia: {
-      marketplace: "",
+    [EChain.scrollSepolia]: {
+      marketplace: process.env.MARKETPLACE_ADDRESS_SCROLL_SEPOLIA || "",
     },
   },
   pinata: {
+    pinataUrl: "https://api.pinata.cloud/pinning/pinFileToIPFS",
     apiKey: process.env.PINATA_API_KEY || "",
     apiSecret: process.env.PINATA_API_SECRET || "",
     jwt: process.env.PINATA_JWT || "",

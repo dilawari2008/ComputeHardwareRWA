@@ -12,4 +12,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.uploadToPinata)
 );
 
+ComputeRouter.post(
+  "/create-listing",
+  forwardRequest(ComputeController.createListing)
+);
+
 export default ComputeRouter;
