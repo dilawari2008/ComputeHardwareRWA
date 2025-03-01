@@ -6,7 +6,7 @@
     "packages": [
       "packages/hardhat",
       "packages/nextjs",
-      "packages/nodejs"
+      "packages/nodejs-backend"
     ]
   },
   "scripts": {
@@ -42,7 +42,7 @@
     "next:serve": "yarn workspace @se-2/nextjs serve",
     "postinstall": "husky",
     "precommit": "lint-staged",
-    "start": "yarn workspace @se-2/nextjs dev",
+    "start": "yarn workspace @se-2/nextjs dev && yarn workspace @se-2/nodejs-backend start",
     "test": "yarn hardhat:test",
     "vercel": "yarn workspace @se-2/nextjs vercel",
     "vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
