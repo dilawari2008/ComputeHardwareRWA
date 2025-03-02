@@ -103,7 +103,12 @@ const createListing = async (listing: ICreateListing) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${Config.pinata.jwt}`,
     },
-    data: JSON.stringify(hardwareMetadata),
+    data: JSON.stringify({
+      pinataContent: hardwareMetadata,
+      pinataMetadata: {
+        name: hardwareName,
+      },
+    }),
   };
 
   const response = await axios.request(requestConfig);
