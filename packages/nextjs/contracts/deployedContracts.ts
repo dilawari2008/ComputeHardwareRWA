@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     RWAMarketplaceDao: {
-      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
         {
           inputs: [],
@@ -43,6 +43,12 @@ const deployedContracts = {
               indexed: true,
               internalType: "address",
               name: "daoAddress",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "creator",
               type: "address",
             },
           ],
@@ -82,58 +88,6 @@ const deployedContracts = {
           type: "event",
         },
         {
-          inputs: [],
-          name: "FEE_PERCENTAGE",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "PERCENTAGE_DECIMALS",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "RENTAL_FEE_PERCENTAGE",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "VOTE_THRESHOLD",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
           inputs: [
             {
               internalType: "string",
@@ -153,6 +107,11 @@ const deployedContracts = {
             {
               internalType: "string",
               name: "tokenSymbol",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "metadataUrl",
               type: "string",
             },
             {
@@ -184,6 +143,63 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "getFeePercentage",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getListingCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "daoAddress",
+              type: "address",
+            },
+          ],
+          name: "getListingDetails",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "daoAddress",
+                  type: "address",
+                },
+                {
+                  internalType: "string",
+                  name: "metadataUrl",
+                  type: "string",
+                },
+              ],
+              internalType: "struct RWAMarketplaceDao.Listing",
+              name: "",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "getListings",
           outputs: [
             {
@@ -196,19 +212,58 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [
+          inputs: [],
+          name: "getPercentageDecimals",
+          outputs: [
             {
               internalType: "uint256",
               name: "",
               type: "uint256",
             },
           ],
-          name: "listings",
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getRentalFeePercentage",
           outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getVoteThreshold",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [
             {
               internalType: "address",
               name: "daoAddress",
               type: "address",
+            },
+          ],
+          name: "isRegisteredDao",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
             },
           ],
           stateMutability: "view",
@@ -222,25 +277,6 @@ const deployedContracts = {
               internalType: "address",
               name: "",
               type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "registeredDaos",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
             },
           ],
           stateMutability: "view",

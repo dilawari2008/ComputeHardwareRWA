@@ -38,7 +38,7 @@ const uploadToPinata = async (file: Express.Multer.File) => {
       contentType: file.mimetype,
     });
 
-    const response = await axios.post(Config.pinata.pinataUrl, data, {
+    const response = await axios.post(Config.pinata.pinataBlobUrl, data, {
       maxContentLength: Infinity,
       headers: {
         "Content-Type": `multipart/form-data; boundary=${
@@ -98,7 +98,7 @@ const createListing = async (listing: ICreateListing) => {
   const requestConfig = {
     method: "post",
     maxBodyLength: Infinity,
-    url: `${Config.pinata.pinataUrl}`,
+    url: `${Config.pinata.pinataJsonUrl}`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${Config.pinata.jwt}`,
@@ -132,10 +132,10 @@ const createListing = async (listing: ICreateListing) => {
     nftSymbol,
     tokenName,
     tokenSymbol,
+    metadataUrl,
     ethers.BigNumber.from(totalTokens || "1000"),
     ethers.utils.parseUnits(tokenPrice.toString(), "ether"),
     ethers.utils.parseUnits(rentalPrice.toString(), "ether"),
-    metadataUrl,
   ]);
 
   // 6. Estimate gas (this will be paid by the user)

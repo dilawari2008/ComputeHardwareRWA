@@ -6,26 +6,20 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RWAMarketplaceDao is Ownable {
     // Constants that will be passed to each RWADao
-    uint256 public constant PERCENTAGE_DECIMALS = 10000;
-    uint256 public constant FEE_PERCENTAGE = 300; // 3%
-    uint256 public constant RENTAL_FEE_PERCENTAGE = 200; // 2%
-    uint256 public constant VOTE_THRESHOLD = 6000; // 60%
+    uint256 private constant PERCENTAGE_DECIMALS = 10000;
+    uint256 private constant FEE_PERCENTAGE = 300; // 3%
+    uint256 private constant RENTAL_FEE_PERCENTAGE = 200; // 2%
+    uint256 private constant VOTE_THRESHOLD = 6000; // 60%
 
     struct Listing {
         address daoAddress;
-        string nftName;
-        string nftSymbol;
-        string tokenName;
-        string tokenSymbol;
         string metadataUrl;
-        uint256 initialSupply;
-        uint256 initialTokenPrice;
-        uint256 initialRentalPrice;
-        address creator;
     }
 
-    Listing[] public listings;
-    mapping(address => bool) public registeredDaos;
+    // Array approach uses less gas than mappings for iteration
+    Listing[] private listings;
+    // More gas efficient than searching through array
+    mapping(address => uint256) private daoToIndex;
 
     event ListingCreated(address indexed daoAddress, address indexed creator);
     event ListingRemoved(address indexed daoAddress);
@@ -33,11 +27,11 @@ contract RWAMarketplaceDao is Ownable {
     constructor() Ownable(msg.sender) {}
 
     function createListing(
-        string memory nftName,
-        string memory nftSymbol,
-        string memory tokenName,
-        string memory tokenSymbol,
-        string memory metadataUrl,
+        string calldata nftName,
+        string calldata nftSymbol,
+        string calldata tokenName,
+        string calldata tokenSymbol,
+        string calldata metadataUrl,
         uint256 initialSupply,
         uint256 initialTokenPrice,
         uint256 initialRentalPrice
@@ -59,50 +53,46 @@ contract RWAMarketplaceDao is Ownable {
             VOTE_THRESHOLD
         );
 
+        address daoAddress = address(newDao);
+
         // Add to listings with all the information
-        Listing memory newListing = Listing({
-            daoAddress: address(newDao),
-            nftName: nftName,
-            nftSymbol: nftSymbol,
-            tokenName: tokenName,
-            tokenSymbol: tokenSymbol,
-            metadataUrl: metadataUrl,
-            initialSupply: initialSupply,
-            initialTokenPrice: initialTokenPrice,
-            initialRentalPrice: initialRentalPrice,
-            creator: msg.sender
-        });
+        listings.push(Listing({ daoAddress: daoAddress, metadataUrl: metadataUrl }));
 
-        listings.push(newListing);
-        registeredDaos[address(newDao)] = true;
+        // Store the index + 1 (0 means not found)
+        daoToIndex[daoAddress] = listings.length;
 
-        emit ListingCreated(address(newDao), msg.sender);
+        emit ListingCreated(daoAddress, msg.sender);
 
-        return address(newDao);
+        return daoAddress;
     }
 
     function removeListing(address daoAddress) external onlyOwner {
-        require(registeredDaos[daoAddress], "DAO not registered");
+        uint256 index = daoToIndex[daoAddress];
+        require(index > 0, "DAO not registered");
 
-        for (uint i = 0; i < listings.length; i++) {
-            if (listings[i].daoAddress == daoAddress) {
-                // Remove the listing by swapping with the last element and popping
-                listings[i] = listings[listings.length - 1];
-                listings.pop();
-                registeredDaos[daoAddress] = false;
+        // Get actual array index (stored as index+1)
+        index--;
 
-                emit ListingRemoved(daoAddress);
-                return;
-            }
+        // If not the last element, swap with the last one
+        uint256 lastIndex = listings.length - 1;
+        if (index != lastIndex) {
+            Listing memory lastListing = listings[lastIndex];
+            listings[index] = lastListing;
+            // Update the index for the moved listing
+            daoToIndex[lastListing.daoAddress] = index + 1;
         }
 
-        revert("Listing not found");
+        // Remove the last element and the mapping
+        listings.pop();
+        delete daoToIndex[daoAddress];
+
+        emit ListingRemoved(daoAddress);
     }
 
     function getListings() external view returns (address[] memory) {
         address[] memory daoAddresses = new address[](listings.length);
 
-        for (uint i = 0; i < listings.length; i++) {
+        for (uint256 i = 0; i < listings.length; i++) {
             daoAddresses[i] = listings[i].daoAddress;
         }
 
@@ -110,18 +100,34 @@ contract RWAMarketplaceDao is Ownable {
     }
 
     function getListingDetails(address daoAddress) external view returns (Listing memory) {
-        require(registeredDaos[daoAddress], "DAO not registered");
+        uint256 index = daoToIndex[daoAddress];
+        require(index > 0, "DAO not registered");
 
-        for (uint i = 0; i < listings.length; i++) {
-            if (listings[i].daoAddress == daoAddress) {
-                return listings[i];
-            }
-        }
+        return listings[index - 1];
+    }
 
-        revert("Listing not found");
+    function isRegisteredDao(address daoAddress) external view returns (bool) {
+        return daoToIndex[daoAddress] > 0;
     }
 
     function getListingCount() external view returns (uint256) {
         return listings.length;
+    }
+
+    // Getters for constants
+    function getPercentageDecimals() external pure returns (uint256) {
+        return PERCENTAGE_DECIMALS;
+    }
+
+    function getFeePercentage() external pure returns (uint256) {
+        return FEE_PERCENTAGE;
+    }
+
+    function getRentalFeePercentage() external pure returns (uint256) {
+        return RENTAL_FEE_PERCENTAGE;
+    }
+
+    function getVoteThreshold() external pure returns (uint256) {
+        return VOTE_THRESHOLD;
     }
 }

@@ -23,7 +23,8 @@ const Config = {
     },
   },
   pinata: {
-    pinataUrl: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+    pinataBlobUrl: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+    pinataJsonUrl: "https://api.pinata.cloud/pinning/pinJSONToIPFS",
     apiKey: process.env.PINATA_API_KEY || "",
     apiSecret: process.env.PINATA_API_SECRET || "",
     jwt: process.env.PINATA_JWT || "",
