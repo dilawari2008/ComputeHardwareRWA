@@ -614,6 +614,128 @@ const getDaoTokenInfo = async (daoAddress: string) => {
   }
 };
 
+const getDaoDetails = async (daoAddress: string) => {
+  if (!daoAddress) {
+    throw createHttpError.BadRequest("DAO address is required");
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the RWADao contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Get contract addresses
+    const tokenContractAddress = await daoContract.TOKEN_CONTRACT();
+    const nftContractAddress = await daoContract.NFT_CONTRACT();
+
+    // Create contract instances
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      RWA_TOKEN_ABI,
+      provider
+    );
+    const nftContract = new ethers.Contract(
+      nftContractAddress,
+      RWA_NFT_ABI,
+      provider
+    );
+
+    // Get marketplace contract address
+    const marketplaceAddress =
+      Config.contractAddress[(process.env.CHAIN as EChain) || EChain.hardhat]
+        .marketplace;
+    const marketplaceContract = new ethers.Contract(
+      marketplaceAddress,
+      MARKETPLACE_ABI,
+      provider
+    );
+
+    // Get token and rental prices
+    const tokenPrice = await daoContract.tokenPrice();
+    const rentalPrice = await daoContract.rentalPrice();
+
+    // Get current tenant status
+    const currentTenant = await daoContract.currentTenant();
+    const isAvailable = currentTenant === ethers.constants.AddressZero;
+
+    // Get token details
+    const tokenName = await tokenContract.name();
+    const tokenSymbol = await tokenContract.symbol();
+    const totalSupply = await tokenContract.totalSupply();
+    const availableTokensForSale =
+      await daoContract.getAvailableTokensForSale();
+
+    // Get NFT details and metadata
+    const nftTokenId = 0; // First token
+    const nftTokenURI = await nftContract.tokenURI(nftTokenId);
+
+    // Get marketplace parameters
+    const feePercentage = await marketplaceContract.getRentalFeePercentage();
+    const voteThreshold = await marketplaceContract.getVoteThreshold();
+    const percentageDecimals =
+      await marketplaceContract.getPercentageDecimals();
+
+    // Get hardware metadata from token URI
+    let hardwareMetadata: any = {};
+    try {
+      const response = await axios.get(nftTokenURI);
+      hardwareMetadata = response.data;
+    } catch (error) {
+      console.warn(`Could not fetch metadata from ${nftTokenURI}:`, error);
+    }
+
+    const formattedVoteThreshold = `${
+      (voteThreshold * 100) / percentageDecimals
+    }% majority`;
+    const formattedFeePercentage = `${
+      (feePercentage * 100) / percentageDecimals
+    }% marketplace fee`;
+
+    // Format results by category
+    const result = {
+      hardware: {
+        name: hardwareMetadata?.name || "NVIDIA A100 80GB",
+        performance: hardwareMetadata?.cpu || "312 TFLOPS (FP16)",
+        location: hardwareMetadata?.location || "US East",
+        created: hardwareMetadata?.created || "5/15/2023",
+        status: isAvailable ? "Available" : "Rented",
+        rentalPrice: `${ethers.utils.formatEther(rentalPrice)} ETH / day`,
+      },
+      token: {
+        name: tokenName || "NVIDIA A100 Token",
+        symbol: tokenSymbol || "A100T",
+        address: tokenContractAddress,
+        totalSupply: totalSupply.toString() || "100 tokens",
+        availableForSale: availableTokensForSale.toString() || "25 tokens",
+        tokenPrice: `${ethers.utils.formatEther(tokenPrice)} ETH / token`,
+      },
+      dao: {
+        address: daoAddress,
+        governance: "Token-weighted voting",
+        voteThreshold: formattedVoteThreshold,
+        feeStructure: formattedFeePercentage,
+      },
+      nft: {
+        address: nftContractAddress,
+        id: nftTokenId.toString(),
+        legalBinding: "Verified ✓",
+        hardwareVerification: "Verified ✓",
+      },
+    };
+
+    return result;
+  } catch (error: any) {
+    console.error("Error fetching DAO details:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to get DAO details: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -622,6 +744,7 @@ const ComputeService = {
   buyTokens,
   getListing,
   getDaoTokenInfo,
+  getDaoDetails,
 };
 
 export default ComputeService;

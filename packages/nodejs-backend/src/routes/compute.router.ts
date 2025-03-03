@@ -36,4 +36,9 @@ ComputeRouter.get(
   forwardRequest(ComputeController.getDaoTokenInfo)
 );
 
+ComputeRouter.get(
+  "/dao-details",
+  forwardRequest(ComputeController.getDaoDetails)
+);
+
 export default ComputeRouter;

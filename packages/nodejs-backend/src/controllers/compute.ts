@@ -1,6 +1,7 @@
 import LOGGER from "@/common/logger";
 import ComputeService from "@/services/compute";
 import { Request, Response } from "express";
+
 const uploadToPinata = async (req: Request, res: Response) => {
   try {
     const file = req.file;
@@ -100,6 +101,21 @@ const getDaoTokenInfo = async (req: Request, res: Response) => {
   }
 };
 
+const getDaoDetails = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getDaoDetails(
+      req?.query?.daoAddress as string
+    );
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getDaoDetails controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -108,6 +124,7 @@ const ComputeController = {
   buyTokens,
   getListing,
   getDaoTokenInfo,
+  getDaoDetails,
 };
 
 export default ComputeController;
