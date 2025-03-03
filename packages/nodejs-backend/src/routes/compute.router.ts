@@ -31,4 +31,9 @@ ComputeRouter.post("/buy-tokens", forwardRequest(ComputeController.buyTokens));
 
 ComputeRouter.get("/listing", forwardRequest(ComputeController.getListing));
 
+ComputeRouter.get(
+  "/dao-token-info",
+  forwardRequest(ComputeController.getDaoTokenInfo)
+);
+
 export default ComputeRouter;

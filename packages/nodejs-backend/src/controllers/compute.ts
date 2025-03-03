@@ -85,6 +85,21 @@ const getListing = async (req: Request, res: Response) => {
   }
 };
 
+const getDaoTokenInfo = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getDaoTokenInfo(
+      req?.query?.daoAddress as string
+    );
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getDaoTokenInfo controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -92,6 +107,7 @@ const ComputeController = {
   getFractionalizeTokensTx,
   buyTokens,
   getListing,
+  getDaoTokenInfo,
 };
 
 export default ComputeController;

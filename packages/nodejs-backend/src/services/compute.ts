@@ -565,6 +565,55 @@ const getListing = async () => {
   }
 };
 
+const getDaoTokenInfo = async (daoAddress: string) => {
+  if (!daoAddress) {
+    throw createHttpError.BadRequest("DAO address is required");
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the RWADao contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Get the token contract address
+    const tokenContractAddress = await daoContract.TOKEN_CONTRACT();
+
+    // Create token contract instance
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      RWA_TOKEN_ABI,
+      provider
+    );
+
+    // Get total supply of tokens
+    const totalSupply = await tokenContract.totalSupply();
+
+    // Get available tokens for sale
+    const availableTokensForSale =
+      await daoContract.getAvailableTokensForSale();
+
+    const res = {
+      totalTokens: totalSupply.toString(),
+      availableTokensForSale: availableTokensForSale.toString(),
+      formattedTotalTokens: Number(totalSupply.toString()),
+      formattedAvailableTokensForSale: Number(
+        availableTokensForSale.toString()
+      ),
+    };
+
+    return res;
+  } catch (error: any) {
+    console.error("Error fetching DAO token info:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to get DAO token information: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -572,6 +621,7 @@ const ComputeService = {
   getFractionalizeTokensTx,
   buyTokens,
   getListing,
+  getDaoTokenInfo,
 };
 
 export default ComputeService;
