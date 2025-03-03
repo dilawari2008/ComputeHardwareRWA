@@ -12,6 +12,7 @@ import EChain from "@/common/chain.enum";
 import { MARKETPLACE_ABI } from "@/common/constants/abi/marketplace.abi";
 import { RWADAO_ABI } from "@/common/constants/abi/rwa-dao.abi";
 import { RWA_TOKEN_ABI } from "@/common/constants/abi/token";
+import { RWA_NFT_ABI } from "@/common/constants/abi/nft.abi";
 
 const provider = new ethers.providers.JsonRpcProvider(
   Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
@@ -460,12 +461,107 @@ const buyTokens = async (req: IBuyTokensReq) => {
   }
 };
 
+interface ListingMetadata {
+  name?: string;
+  image?: string;
+  cpu?: string;
+  memory?: string;
+  location?: string;
+  daoAddress: string;
+  tokenPrice?: string;
+  rentalPrice?: string;
+}
+
+const getListing = async () => {
+  try {
+    // Create provider
+    const provider = new ethers.providers.JsonRpcProvider(
+      Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+    );
+
+    // Get marketplace contract address
+    const marketplaceAddress =
+      Config.contractAddress[(process.env.CHAIN as EChain) || EChain.hardhat]
+        .marketplace;
+
+    // Create marketplace contract instance
+    const marketplaceContract = new ethers.Contract(
+      marketplaceAddress,
+      MARKETPLACE_ABI,
+      provider
+    );
+
+    // Get all dao addresses from marketplace
+    const daoAddresses = await marketplaceContract.getListings();
+
+    // Array to store all listing metadata
+    const listings: ListingMetadata[] = [];
+
+    // Loop through each dao address
+    for (const daoAddress of daoAddresses) {
+      try {
+        // Create dao contract instance
+        const daoContract = new ethers.Contract(
+          daoAddress,
+          RWADAO_ABI,
+          provider
+        );
+
+        // Get NFT contract address from RWADao
+        const nftContractAddress = await daoContract.NFT_CONTRACT();
+
+        // Create NFT contract instance
+        const nftContract = new ethers.Contract(
+          nftContractAddress,
+          RWA_NFT_ABI,
+          provider
+        );
+
+        // Get metadata URL for NFT index 0
+        const metadataUrl = await nftContract.tokenURI(0);
+
+        // Get token and rental prices
+        const tokenPrice = await daoContract.tokenPrice();
+        const rentalPrice = await daoContract.rentalPrice();
+
+        // Fetch metadata JSON
+        const response = await axios.get(metadataUrl);
+        const metadata = response.data;
+
+        // Add dao address and price information to metadata
+        listings.push({
+          ...metadata,
+          daoAddress,
+          tokenPrice: ethers.utils.formatEther(tokenPrice),
+          rentalPrice: ethers.utils.formatEther(rentalPrice),
+        });
+      } catch (error) {
+        console.error(`Error fetching data for DAO at ${daoAddress}:`, error);
+        // Continue with next DAO address instead of failing the whole request
+      }
+    }
+
+    // Sort listings by daoAddress
+    const sortedListings = listings.sort((a, b) => {
+      return a.daoAddress.localeCompare(b.daoAddress);
+    });
+
+    return sortedListings;
+  } catch (error: any) {
+    console.error("Error in getListing:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to get listings: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
   getTokenApprovalTx,
   getFractionalizeTokensTx,
   buyTokens,
+  getListing,
 };
 
 export default ComputeService;

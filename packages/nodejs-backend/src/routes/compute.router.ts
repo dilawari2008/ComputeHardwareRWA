@@ -29,4 +29,6 @@ ComputeRouter.post(
 
 ComputeRouter.post("/buy-tokens", forwardRequest(ComputeController.buyTokens));
 
+ComputeRouter.get("/listing", forwardRequest(ComputeController.getListing));
+
 export default ComputeRouter;

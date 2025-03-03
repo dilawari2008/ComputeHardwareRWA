@@ -72,12 +72,26 @@ const buyTokens = async (req: Request, res: Response) => {
   }
 };
 
+const getListing = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getListing();
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getListing controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
   getTokenApprovalTx,
   getFractionalizeTokensTx,
   buyTokens,
+  getListing,
 };
 
 export default ComputeController;
