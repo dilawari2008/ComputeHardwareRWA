@@ -17,4 +17,14 @@ ComputeRouter.post(
   forwardRequest(ComputeController.createListing)
 );
 
+ComputeRouter.post(
+  "/get-token-approval-tx",
+  forwardRequest(ComputeController.getTokenApprovalTx)
+);
+
+ComputeRouter.post(
+  "/get-fractionalize-tokens-tx",
+  forwardRequest(ComputeController.getFractionalizeTokensTx)
+);
+
 export default ComputeRouter;
