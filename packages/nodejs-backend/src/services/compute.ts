@@ -494,11 +494,8 @@ const getListing = async () => {
     // Get all dao addresses from marketplace
     const daoAddresses = await marketplaceContract.getListings();
 
-    // Array to store all listing metadata
-    const listings: ListingMetadata[] = [];
-
-    // Loop through each dao address
-    for (const daoAddress of daoAddresses) {
+    // Fetch all listings in parallel
+    const listingsPromises = daoAddresses.map(async (daoAddress: string) => {
       try {
         // Create dao contract instance
         const daoContract = new ethers.Contract(
@@ -507,8 +504,14 @@ const getListing = async () => {
           provider
         );
 
-        // Get NFT contract address from RWADao
-        const nftContractAddress = await daoContract.NFT_CONTRACT();
+        // Get contract data in parallel
+        const [nftContractAddress, tokenPrice, rentalPrice] = await Promise.all(
+          [
+            daoContract.NFT_CONTRACT(),
+            daoContract.tokenPrice(),
+            daoContract.rentalPrice(),
+          ]
+        );
 
         // Create NFT contract instance
         const nftContract = new ethers.Contract(
@@ -520,26 +523,33 @@ const getListing = async () => {
         // Get metadata URL for NFT index 0
         const metadataUrl = await nftContract.tokenURI(0);
 
-        // Get token and rental prices
-        const tokenPrice = await daoContract.tokenPrice();
-        const rentalPrice = await daoContract.rentalPrice();
-
         // Fetch metadata JSON
         const response = await axios.get(metadataUrl);
         const metadata = response.data;
 
-        // Add dao address and price information to metadata
-        listings.push({
+        // Return listing with dao address and price information
+        const listing = {
           ...metadata,
           daoAddress,
           tokenPrice: ethers.utils.formatEther(tokenPrice),
           rentalPrice: ethers.utils.formatEther(rentalPrice),
-        });
+        };
+
+        return listing;
       } catch (error) {
         console.error(`Error fetching data for DAO at ${daoAddress}:`, error);
-        // Continue with next DAO address instead of failing the whole request
+        // Return null for failed listings
+        return null;
       }
-    }
+    });
+
+    // Wait for all promises to resolve
+    const results = await Promise.all(listingsPromises);
+
+    // Filter out null values (failed listings)
+    const listings = results.filter(
+      (listing) => listing !== null
+    ) as ListingMetadata[];
 
     // Sort listings by daoAddress
     const sortedListings = listings.sort((a, b) => {
