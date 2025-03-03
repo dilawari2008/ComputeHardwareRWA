@@ -352,11 +352,120 @@ const getFractionalizeTokensTx = async (req: IFractionalizeTokensReq) => {
   }
 };
 
+interface IBuyTokensReq {
+  numberOfTokens: number;
+  userAddress: string;
+  daoAddress: string;
+}
+
+const buyTokens = async (req: IBuyTokensReq) => {
+  const { numberOfTokens, userAddress, daoAddress } = req;
+
+  if (!numberOfTokens || !userAddress || !daoAddress) {
+    throw createHttpError.BadRequest(
+      "Number of tokens, user address, and DAO address are required"
+    );
+  }
+
+  if (numberOfTokens <= 0) {
+    throw createHttpError.BadRequest("Amount must be greater than 0");
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the token price from the DAO contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+    const tokenPrice = await daoContract.tokenPrice();
+
+    // Calculate total payment required
+    const totalPayment = tokenPrice.mul(ethers.BigNumber.from(numberOfTokens));
+
+    // Check if enough tokens are available for sale
+    const availableTokens = await daoContract.getAvailableTokensForSale();
+    if (availableTokens.lt(numberOfTokens)) {
+      throw createHttpError.BadRequest(
+        `Not enough tokens available for sale. Requested: ${numberOfTokens}, Available: ${availableTokens.toString()}`
+      );
+    }
+
+    // Create DAO contract interface
+    const daoInterface = new ethers.utils.Interface(RWADAO_ABI);
+
+    // Encode function data for buyTokens
+    const buyData = daoInterface.encodeFunctionData("buyTokens", [
+      ethers.BigNumber.from(numberOfTokens),
+    ]);
+
+    // Estimate gas
+    const gasEstimate = await provider.estimateGas({
+      from: userAddress,
+      to: daoAddress,
+      data: buyData,
+      value: totalPayment,
+    });
+
+    // Get current gas price
+    const gasPrice = await provider.getGasPrice();
+
+    // Get nonce for the user
+    const nonce = await provider.getTransactionCount(userAddress);
+
+    // Get chainId
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+
+    // Create transaction object
+    const txObject = {
+      from: userAddress,
+      to: daoAddress,
+      data: buyData,
+      value: totalPayment.toString(),
+      gasLimit: gasEstimate,
+      gasPrice,
+      nonce,
+      chainId,
+    };
+
+    const res = {
+      tx: txObject,
+      totalPayment: ethers.utils.formatEther(totalPayment),
+      message: `Transaction created to buy ${numberOfTokens} tokens for ${ethers.utils.formatEther(
+        totalPayment
+      )} ETH. Please sign to complete purchase.`,
+    };
+
+    return res;
+  } catch (error: any) {
+    // Handle specific error cases
+    if (
+      error.message &&
+      error.message.includes("Not enough tokens available")
+    ) {
+      throw error; // Re-throw our custom error
+    }
+
+    if (error.message && error.message.includes("Incorrect payment amount")) {
+      throw createHttpError.BadRequest(
+        "Incorrect payment amount calculated. Please try again."
+      );
+    }
+
+    throw createHttpError.InternalServerError(
+      `Failed to prepare buy transaction: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
   getTokenApprovalTx,
   getFractionalizeTokensTx,
+  buyTokens,
 };
 
 export default ComputeService;

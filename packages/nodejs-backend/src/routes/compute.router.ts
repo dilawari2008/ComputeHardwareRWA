@@ -27,4 +27,6 @@ ComputeRouter.post(
   forwardRequest(ComputeController.getFractionalizeTokensTx)
 );
 
+ComputeRouter.post("/buy-tokens", forwardRequest(ComputeController.buyTokens));
+
 export default ComputeRouter;

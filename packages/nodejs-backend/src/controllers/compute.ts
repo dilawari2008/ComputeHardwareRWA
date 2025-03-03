@@ -59,11 +59,25 @@ const getFractionalizeTokensTx = async (req: Request, res: Response) => {
   }
 };
 
+const buyTokens = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.buyTokens(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in buyTokens controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
   getTokenApprovalTx,
   getFractionalizeTokensTx,
+  buyTokens,
 };
 
 export default ComputeController;
