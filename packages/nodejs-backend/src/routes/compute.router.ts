@@ -17,4 +17,28 @@ ComputeRouter.post(
   forwardRequest(ComputeController.createListing)
 );
 
+ComputeRouter.post(
+  "/get-token-approval-tx",
+  forwardRequest(ComputeController.getTokenApprovalTx)
+);
+
+ComputeRouter.post(
+  "/get-fractionalize-tokens-tx",
+  forwardRequest(ComputeController.getFractionalizeTokensTx)
+);
+
+ComputeRouter.post("/buy-tokens", forwardRequest(ComputeController.buyTokens));
+
+ComputeRouter.get("/listing", forwardRequest(ComputeController.getListing));
+
+ComputeRouter.get(
+  "/dao-token-info",
+  forwardRequest(ComputeController.getDaoTokenInfo)
+);
+
+ComputeRouter.get(
+  "/dao-details",
+  forwardRequest(ComputeController.getDaoDetails)
+);
+
 export default ComputeRouter;
