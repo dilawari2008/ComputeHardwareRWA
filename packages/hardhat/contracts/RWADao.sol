@@ -180,9 +180,20 @@ contract RWADao is Ownable {
 
     function _resetProposal(bool approved) private {
         emit ProposalCompleted(approved, approved ? currentProposal.proposedPrice : rentalPrice);
+
+        // Get holders to reset their votes in the mapping
+        address[] memory holders = TOKEN_CONTRACT.getHolders();
+        for (uint256 i = 0; i < holders.length; i++) {
+            if (currentProposal.hasVoted[holders[i]]) {
+                currentProposal.hasVoted[holders[i]] = false;
+            }
+        }
+
+        // Reset all other fields
         delete currentProposal.proposedPrice;
         delete currentProposal.votesFor;
         delete currentProposal.votesAgainst;
+        delete currentProposal.timestamp;
         currentProposal.isActive = false;
     }
 
