@@ -859,6 +859,135 @@ const proposeNewRentalPrice = async (req: IProposeNewRentalPriceReq) => {
   }
 };
 
+interface IVoteOnProposalReq {
+  daoAddress: string;
+  userAddress: string;
+  inFavor: boolean;
+}
+
+const voteOnProposal = async (req: IVoteOnProposalReq) => {
+  const { daoAddress, userAddress, inFavor } = req;
+
+  if (!daoAddress || !userAddress || inFavor === undefined) {
+    throw createHttpError.BadRequest(
+      "DAO address, user address, and vote choice are required"
+    );
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the RWADao contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Get the token contract address to check if user is a token holder
+    const tokenContractAddress = await daoContract.TOKEN_CONTRACT();
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      RWA_TOKEN_ABI,
+      provider
+    );
+
+    // Check if user is a token holder
+    const tokenBalance = await tokenContract.balanceOf(userAddress);
+    if (tokenBalance.eq(0)) {
+      throw createHttpError.BadRequest("You must be a token holder to vote");
+    }
+
+    // Check if there's an active proposal
+    const currentProposal = await daoContract.currentProposal();
+    if (!currentProposal.isActive) {
+      throw createHttpError.BadRequest("There's no active proposal to vote on");
+    }
+
+    // The currentProposal is a struct and we can't directly access its hasVoted mapping
+    // We need to call the contract's view function that checks this
+    try {
+      // Since there's no direct function to check if voted, we'll try to vote in a static call
+      // If it reverts with "Already voted", then we know the user has voted
+      await daoContract.callStatic.vote(inFavor, { from: userAddress });
+      // If we reach here, it means the user hasn't voted yet
+    } catch (error: any) {
+      if (error.message.includes("Already voted")) {
+        throw createHttpError.BadRequest(
+          "You have already voted on this proposal"
+        );
+      }
+      // For other errors, continue with the function
+    }
+
+    // Get user's voting weight for information
+    const totalSupply = await tokenContract.totalSupply();
+    const percentageDecimals = await daoContract.PERCENTAGE_DECIMALS();
+    const voterWeight = tokenBalance.mul(percentageDecimals).div(totalSupply);
+    const voterWeightPercentage = (voterWeight * 100) / percentageDecimals;
+
+    const proposedPrice = currentProposal.proposedPrice;
+
+    // Create DAO contract interface
+    const daoInterface = new ethers.utils.Interface(RWADAO_ABI);
+
+    // Encode function data for vote
+    const voteData = daoInterface.encodeFunctionData("vote", [inFavor]);
+
+    // Estimate gas
+    const gasEstimate = await provider.estimateGas({
+      from: userAddress,
+      to: daoAddress,
+      data: voteData,
+    });
+
+    // Get current gas price
+    const gasPrice = await provider.getGasPrice();
+
+    // Get nonce for the user
+    const nonce = await provider.getTransactionCount(userAddress);
+
+    // Get chainId
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+
+    // Create transaction object
+    const txObject = {
+      from: userAddress,
+      to: daoAddress,
+      data: voteData,
+      gasLimit: gasEstimate,
+      gasPrice,
+      nonce,
+      chainId,
+    };
+
+    const res = {
+      tx: txObject,
+      proposedPrice: ethers.utils.formatEther(proposedPrice),
+      votingWeight: `${voterWeightPercentage}%`,
+      vote: inFavor ? "In favor" : "Against",
+      message: `Transaction created to vote ${
+        inFavor ? "in favor of" : "against"
+      } the proposal to change rental price to ${ethers.utils.formatEther(
+        proposedPrice
+      )} ETH/day. Your voting weight is ${voterWeightPercentage}%.`,
+    };
+
+    return res;
+  } catch (error: any) {
+    // Handle specific error cases
+    if (error.code === "CALL_EXCEPTION") {
+      throw createHttpError.BadRequest(
+        "Contract call failed. Make sure the DAO contract is valid."
+      );
+    }
+
+    throw createHttpError.InternalServerError(
+      `Failed to create vote transaction: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -869,6 +998,7 @@ const ComputeService = {
   getDaoTokenInfo,
   getDaoDetails,
   proposeNewRentalPrice,
+  voteOnProposal,
 };
 
 export default ComputeService;

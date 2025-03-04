@@ -46,4 +46,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.proposeNewRentalPrice)
 );
 
+ComputeRouter.post(
+  "/vote-on-proposal",
+  forwardRequest(ComputeController.voteOnProposal)
+);
+
 export default ComputeRouter;
