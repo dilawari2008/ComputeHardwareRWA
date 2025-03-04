@@ -51,4 +51,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.voteOnProposal)
 );
 
+ComputeRouter.post(
+  "/current-proposal",
+  forwardRequest(ComputeController.getCurrentProposal)
+);
+
 export default ComputeRouter;

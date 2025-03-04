@@ -988,6 +988,92 @@ const voteOnProposal = async (req: IVoteOnProposalReq) => {
   }
 };
 
+const getCurrentProposal = async (daoAddress: string) => {
+  if (!daoAddress) {
+    throw createHttpError.BadRequest("DAO address is required");
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the RWADao contract - use daoAddress directly instead of an object
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Get proposal details
+    const currentProposal = await daoContract.currentProposal();
+
+    // Get current rental price for comparison
+    const currentRentalPrice = await daoContract.rentalPrice();
+
+    // Get vote threshold information
+    const voteThreshold = await daoContract.VOTE_THRESHOLD();
+    const percentageDecimals = await daoContract.PERCENTAGE_DECIMALS();
+    const thresholdPercentage = (voteThreshold * 100) / percentageDecimals;
+
+    // If there's no active proposal
+    if (!currentProposal.isActive) {
+      return {
+        active: false,
+        message: "No active rental price proposal",
+      };
+    }
+
+    // Format the response with relevant proposal details
+    const res = {
+      active: true,
+      proposedPrice: ethers.utils.formatEther(currentProposal.proposedPrice),
+      currentPrice: ethers.utils.formatEther(currentRentalPrice),
+      votesFor: (currentProposal.votesFor * 100) / percentageDecimals,
+      votesAgainst: (currentProposal.votesAgainst * 100) / percentageDecimals,
+      voteThreshold: thresholdPercentage,
+      proposalTimestamp: new Date(
+        currentProposal.timestamp.toNumber() * 1000
+      ).toISOString(),
+      remainingNeeded: Math.max(
+        0,
+        thresholdPercentage -
+          (currentProposal.votesFor * 100) / percentageDecimals
+      ),
+      status: getProposalStatus(
+        currentProposal.votesFor,
+        currentProposal.votesAgainst,
+        voteThreshold,
+        percentageDecimals
+      ),
+    };
+
+    return res;
+  } catch (error: any) {
+    console.error("Error fetching current proposal:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to get proposal information: ${error.message}`
+    );
+  }
+};
+
+// Helper function to determine the status of a proposal
+const getProposalStatus = (
+  votesFor: number,
+  votesAgainst: number,
+  threshold: number,
+  decimals: number
+) => {
+  const forPercentage = (votesFor * 100) / decimals;
+  const againstPercentage = (votesAgainst * 100) / decimals;
+  const thresholdPercentage = (threshold * 100) / decimals;
+
+  if (forPercentage >= thresholdPercentage) {
+    return "Passing";
+  } else if (againstPercentage > 100 - thresholdPercentage) {
+    return "Failing";
+  } else {
+    return "In Progress";
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -999,6 +1085,7 @@ const ComputeService = {
   getDaoDetails,
   proposeNewRentalPrice,
   voteOnProposal,
+  getCurrentProposal,
 };
 
 export default ComputeService;

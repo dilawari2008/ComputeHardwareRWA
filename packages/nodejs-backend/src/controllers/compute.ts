@@ -142,6 +142,19 @@ const voteOnProposal = async (req: Request, res: Response) => {
   }
 };
 
+const getCurrentProposal = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getCurrentProposal(req.body.daoAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getCurrentProposal controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -153,6 +166,7 @@ const ComputeController = {
   getDaoDetails,
   proposeNewRentalPrice,
   voteOnProposal,
+  getCurrentProposal,
 };
 
 export default ComputeController;
