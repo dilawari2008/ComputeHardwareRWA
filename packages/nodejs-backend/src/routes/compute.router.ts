@@ -41,4 +41,9 @@ ComputeRouter.get(
   forwardRequest(ComputeController.getDaoDetails)
 );
 
+ComputeRouter.post(
+  "/propose-new-rental-price",
+  forwardRequest(ComputeController.proposeNewRentalPrice)
+);
+
 export default ComputeRouter;

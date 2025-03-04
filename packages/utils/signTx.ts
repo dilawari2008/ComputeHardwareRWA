@@ -9,17 +9,16 @@ script.onload = async () => {
   const txObject = {
     from: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
     to: "0xa16E02E87b7454126E5E10d957A927A7F5B5d2be",
-    data: "0x3610724e0000000000000000000000000000000000000000000000000000000000000035",
-    value: "530000000000000000",
+    data: "0x7fd604c3000000000000000000000000000000000000000000000000006a94d74f430000",
     gasLimit: {
       type: "BigNumber",
-      hex: "0x0282b0",
+      hex: "0x01844e",
     },
     gasPrice: {
       type: "BigNumber",
-      hex: "0x58e75f56",
+      hex: "0x55481553",
     },
-    nonce: 0,
+    nonce: 1,
     chainId: 31337,
   };
 

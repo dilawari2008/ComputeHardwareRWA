@@ -736,6 +736,129 @@ const getDaoDetails = async (daoAddress: string) => {
   }
 };
 
+interface IProposeNewRentalPriceReq {
+  daoAddress: string;
+  userAddress: string;
+  newRentalPrice: string;
+}
+
+const proposeNewRentalPrice = async (req: IProposeNewRentalPriceReq) => {
+  const { daoAddress, userAddress, newRentalPrice } = req;
+
+  if (!daoAddress || !userAddress || !newRentalPrice) {
+    throw createHttpError.BadRequest(
+      "DAO address, user address, and new rental price are required"
+    );
+  }
+
+  if (parseFloat(newRentalPrice) <= 0) {
+    throw createHttpError.BadRequest("Rental price must be greater than 0");
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the RWADao contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Get the token contract address to check if user is a token holder
+    const tokenContractAddress = await daoContract.TOKEN_CONTRACT();
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      RWA_TOKEN_ABI,
+      provider
+    );
+
+    // Check if user is a token holder
+    const tokenBalance = await tokenContract.balanceOf(userAddress);
+    if (tokenBalance.eq(0)) {
+      throw createHttpError.BadRequest(
+        "You must be a token holder to propose a new rental price"
+      );
+    }
+
+    // Check if there's an active proposal
+    const currentProposal = await daoContract.currentProposal();
+    if (currentProposal.isActive) {
+      throw createHttpError.BadRequest("There's already an active proposal");
+    }
+
+    // Get current rental price for information
+    const currentRentalPrice = await daoContract.rentalPrice();
+
+    // Create DAO contract interface
+    const daoInterface = new ethers.utils.Interface(RWADAO_ABI);
+
+    // Convert new rental price to proper format (wei)
+    const newRentalPriceWei = ethers.utils.parseEther(
+      newRentalPrice.toString()
+    );
+
+    // Encode function data for proposeNewRent
+    const proposeData = daoInterface.encodeFunctionData("proposeNewRent", [
+      newRentalPriceWei,
+    ]);
+
+    // Estimate gas
+    const gasEstimate = await provider.estimateGas({
+      from: userAddress,
+      to: daoAddress,
+      data: proposeData,
+    });
+
+    // Get current gas price
+    const gasPrice = await provider.getGasPrice();
+
+    // Get nonce for the user
+    const nonce = await provider.getTransactionCount(userAddress);
+
+    // Get chainId
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+
+    // Create transaction object
+    const txObject = {
+      from: userAddress,
+      to: daoAddress,
+      data: proposeData,
+      gasLimit: gasEstimate,
+      gasPrice,
+      nonce,
+      chainId,
+    };
+
+    // Get vote threshold for information
+    const voteThreshold = await daoContract.VOTE_THRESHOLD();
+    const percentageDecimals = await daoContract.PERCENTAGE_DECIMALS();
+    const thresholdPercentage = (voteThreshold * 100) / percentageDecimals;
+
+    const res = {
+      tx: txObject,
+      currentRentalPrice: ethers.utils.formatEther(currentRentalPrice),
+      newRentalPrice: newRentalPrice.toString(),
+      voteThreshold: `${thresholdPercentage}%`,
+      message: `Transaction created to propose new rental price of ${newRentalPrice} ETH/day (current: ${ethers.utils.formatEther(
+        currentRentalPrice
+      )} ETH/day). Requires ${thresholdPercentage}% majority to pass.`,
+    };
+
+    return res;
+  } catch (error: any) {
+    if (error.code === "CALL_EXCEPTION") {
+      throw createHttpError.BadRequest(
+        "Contract call failed. Make sure the DAO contract is valid."
+      );
+    }
+
+    throw createHttpError.InternalServerError(
+      `Failed to create proposal transaction: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -745,6 +868,7 @@ const ComputeService = {
   getListing,
   getDaoTokenInfo,
   getDaoDetails,
+  proposeNewRentalPrice,
 };
 
 export default ComputeService;
