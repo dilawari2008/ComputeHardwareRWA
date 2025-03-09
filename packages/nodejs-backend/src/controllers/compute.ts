@@ -168,6 +168,19 @@ const becomeTenant = async (req: Request, res: Response) => {
   }
 };
 
+const getDaoBalance = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getDaoBalance(req.body.daoAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getDaoBalance controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -181,6 +194,7 @@ const ComputeController = {
   voteOnProposal,
   getCurrentProposal,
   becomeTenant,
+  getDaoBalance,
 };
 
 export default ComputeController;

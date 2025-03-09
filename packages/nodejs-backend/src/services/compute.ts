@@ -1176,6 +1176,32 @@ const becomeTenant = async (req: IBecomeTenantReq) => {
   }
 };
 
+const getDaoBalance = async (daoAddress: string) => {
+  if (!daoAddress) {
+    throw createHttpError.BadRequest("DAO address is required");
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the contract's ETH balance
+    const balanceWei = await provider.getBalance(daoAddress);
+
+    return {
+      balanceWei: balanceWei.toString(),
+      balanceEth: ethers.utils.formatEther(balanceWei),
+    };
+  } catch (error: any) {
+    console.error("Error fetching DAO balance:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to get DAO balance: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -1189,6 +1215,7 @@ const ComputeService = {
   voteOnProposal,
   getCurrentProposal,
   becomeTenant,
+  getDaoBalance,
 };
 
 export default ComputeService;

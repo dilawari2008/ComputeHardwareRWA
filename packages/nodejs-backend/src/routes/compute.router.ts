@@ -61,4 +61,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.becomeTenant)
 );
 
+ComputeRouter.post(
+  "/dao-balance",
+  forwardRequest(ComputeController.getDaoBalance)
+);
+
 export default ComputeRouter;

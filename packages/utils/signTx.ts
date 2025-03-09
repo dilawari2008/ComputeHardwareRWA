@@ -10,16 +10,16 @@ script.onload = async () => {
     from: "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
     to: "0xa16E02E87b7454126E5E10d957A927A7F5B5d2be",
     data: "0xde522b5d",
-    value: "30000000000000000",
+    value: "20000000000000000",
     gasLimit: {
       type: "BigNumber",
-      hex: "0x016561",
+      hex: "0x0123d2",
     },
     gasPrice: {
       type: "BigNumber",
-      hex: "0x447bc654",
+      hex: "0x520b57b2",
     },
-    nonce: 0,
+    nonce: 4,
     chainId: 31337,
   };
 
