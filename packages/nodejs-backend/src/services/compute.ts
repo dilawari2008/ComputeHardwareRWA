@@ -1202,6 +1202,148 @@ const getDaoBalance = async (daoAddress: string) => {
   }
 };
 
+interface IIsDAOMemberReq {
+  userAddress: string;
+  daoAddress: string;
+}
+
+const isDAOMember = async (req: IIsDAOMemberReq) => {
+  const { userAddress, daoAddress } = req;
+
+  if (!userAddress || !daoAddress) {
+    throw createHttpError.BadRequest(
+      "User address and DAO address are required"
+    );
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the RWADao contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Get the token contract address
+    const tokenContractAddress = await daoContract.TOKEN_CONTRACT();
+
+    // Create token contract instance
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      RWA_TOKEN_ABI,
+      provider
+    );
+
+    // Check if the user is a token holder using the isHolder function
+    const isMember = await tokenContract.isHolder(userAddress);
+
+    // Alternatively, you could check token balance
+    const tokenBalance = await tokenContract.balanceOf(userAddress);
+    const hasMembership = tokenBalance.gt(0);
+
+    return {
+      isMember,
+      tokenBalance: tokenBalance.toString(),
+      tokenAddress: tokenContractAddress,
+    };
+  } catch (error: any) {
+    console.error("Error checking DAO membership:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to check DAO membership status: ${error.message}`
+    );
+  }
+};
+
+interface IsTenantReq {
+  userAddress: string;
+  daoAddress: string;
+}
+
+const isTenant = async (req: IsTenantReq) => {
+  const { userAddress, daoAddress } = req;
+
+  if (!userAddress || !daoAddress) {
+    throw createHttpError.BadRequest(
+      "User address and DAO address are required"
+    );
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get the RWADao contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Get the current tenant address
+    const currentTenant = await daoContract.currentTenant();
+
+    // Check if the user is the current tenant
+    const isTenant = currentTenant.toLowerCase() === userAddress.toLowerCase();
+
+    // Get the rental price for additional info
+    const rentalPrice = await daoContract.rentalPrice();
+
+    return {
+      isTenant,
+      currentTenant:
+        currentTenant !== ethers.constants.AddressZero ? currentTenant : null,
+      propertyAvailable: currentTenant === ethers.constants.AddressZero,
+      rentalPrice: ethers.utils.formatEther(rentalPrice),
+    };
+  } catch (error: any) {
+    console.error("Error checking tenant status:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to check tenant status: ${error.message}`
+    );
+  }
+};
+
+const isMarketplaceOwner = async (userAddress: string) => {
+  if (!userAddress) {
+    throw createHttpError.BadRequest("User address is required");
+  }
+
+  // Create provider
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    // Get marketplace contract address
+    const marketplaceAddress =
+      Config.contractAddress[(process.env.CHAIN as EChain) || EChain.hardhat]
+        .marketplace;
+
+    // Create marketplace contract instance
+    const marketplaceContract = new ethers.Contract(
+      marketplaceAddress,
+      MARKETPLACE_ABI,
+      provider
+    );
+
+    // Get the owner of the marketplace
+    const ownerAddress = await marketplaceContract.owner();
+
+    // Check if user is the owner
+    const isOwner = ownerAddress.toLowerCase() === userAddress.toLowerCase();
+
+    return {
+      isOwner,
+      marketplaceAddress,
+      ownerAddress,
+    };
+  } catch (error: any) {
+    console.error("Error checking marketplace ownership:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to check marketplace ownership: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -1216,6 +1358,9 @@ const ComputeService = {
   getCurrentProposal,
   becomeTenant,
   getDaoBalance,
+  isDAOMember,
+  isTenant,
+  isMarketplaceOwner,
 };
 
 export default ComputeService;

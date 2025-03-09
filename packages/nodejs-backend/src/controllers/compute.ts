@@ -181,6 +181,45 @@ const getDaoBalance = async (req: Request, res: Response) => {
   }
 };
 
+const isDAOMember = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.isDAOMember(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in isDAOMember controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const isTenant = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.isTenant(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in isTenant controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const isMarketplaceOwner = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.isMarketplaceOwner(req.body?.userAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in isMarketplaceOwner controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -195,6 +234,9 @@ const ComputeController = {
   getCurrentProposal,
   becomeTenant,
   getDaoBalance,
+  isDAOMember,
+  isTenant,
+  isMarketplaceOwner,
 };
 
 export default ComputeController;

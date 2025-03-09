@@ -66,4 +66,16 @@ ComputeRouter.post(
   forwardRequest(ComputeController.getDaoBalance)
 );
 
+ComputeRouter.post(
+  "/is-dao-member",
+  forwardRequest(ComputeController.isDAOMember)
+);
+
+ComputeRouter.post("/is-tenant", forwardRequest(ComputeController.isTenant));
+
+ComputeRouter.post(
+  "/is-marketplace-owner",
+  forwardRequest(ComputeController.isMarketplaceOwner)
+);
+
 export default ComputeRouter;
