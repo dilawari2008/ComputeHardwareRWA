@@ -1074,6 +1074,108 @@ const getProposalStatus = (
   }
 };
 
+interface IBecomeTenantReq {
+  userAddress: string;
+  daoAddress: string;
+}
+
+const becomeTenant = async (req: IBecomeTenantReq) => {
+  try {
+    const { userAddress, daoAddress } = req;
+
+    if (!userAddress || !daoAddress) {
+      throw createHttpError.BadRequest(
+        "User address and DAO address are required"
+      );
+    }
+
+    // Create provider
+    const provider = new ethers.providers.JsonRpcProvider(
+      Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+    );
+
+    // Get the RWADao contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    // Check if there's already a tenant
+    const currentTenant = await daoContract.currentTenant();
+    if (currentTenant !== ethers.constants.AddressZero) {
+      throw createHttpError.BadRequest(
+        "This property already has a tenant. It's not available for rent."
+      );
+    }
+
+    // Get the rental price
+    const rentalPrice = await daoContract.rentalPrice();
+
+    // Create DAO contract interface
+    const daoInterface = new ethers.utils.Interface(RWADAO_ABI);
+
+    // Encode function data for becomeTenant (with no arguments, as per the contract)
+    const becomeTenantData = daoInterface.encodeFunctionData(
+      "becomeTenant",
+      []
+    );
+
+    // Estimate gas
+    const gasEstimate = await provider.estimateGas({
+      from: userAddress,
+      to: daoAddress,
+      data: becomeTenantData,
+      value: rentalPrice, // Send the rental price as ETH
+    });
+
+    // Get current gas price
+    const gasPrice = await provider.getGasPrice();
+
+    // Get nonce for the user
+    const nonce = await provider.getTransactionCount(userAddress);
+
+    // Get chainId
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+
+    // Create transaction object
+    const txObject = {
+      from: userAddress,
+      to: daoAddress,
+      data: becomeTenantData,
+      value: rentalPrice.toString(), // Send the rental price as ETH
+      gasLimit: gasEstimate,
+      gasPrice,
+      nonce,
+      chainId,
+    };
+
+    const res = {
+      tx: txObject,
+      rentalPrice: ethers.utils.formatEther(rentalPrice),
+      message: `Transaction created to become a tenant for ${ethers.utils.formatEther(
+        rentalPrice
+      )} ETH. Please sign to complete the rental.`,
+    };
+
+    return res;
+  } catch (error: any) {
+    // Handle specific error cases
+    if (error.message && error.message.includes("Property already rented")) {
+      throw createHttpError.BadRequest(
+        "This property is already rented by another tenant."
+      );
+    }
+
+    if (error.message && error.message.includes("Incorrect rent amount")) {
+      throw createHttpError.BadRequest(
+        "The rental payment amount is incorrect. Please try again."
+      );
+    }
+
+    throw createHttpError.InternalServerError(
+      `Failed to prepare tenant transaction: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -1086,6 +1188,7 @@ const ComputeService = {
   proposeNewRentalPrice,
   voteOnProposal,
   getCurrentProposal,
+  becomeTenant,
 };
 
 export default ComputeService;

@@ -155,6 +155,19 @@ const getCurrentProposal = async (req: Request, res: Response) => {
   }
 };
 
+const becomeTenant = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.becomeTenant(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in becomeTenant controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -167,6 +180,7 @@ const ComputeController = {
   proposeNewRentalPrice,
   voteOnProposal,
   getCurrentProposal,
+  becomeTenant,
 };
 
 export default ComputeController;

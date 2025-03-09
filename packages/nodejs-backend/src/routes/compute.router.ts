@@ -56,4 +56,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.getCurrentProposal)
 );
 
+ComputeRouter.post(
+  "/become-tenant",
+  forwardRequest(ComputeController.becomeTenant)
+);
+
 export default ComputeRouter;
