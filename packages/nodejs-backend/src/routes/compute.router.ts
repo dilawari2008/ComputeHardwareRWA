@@ -98,4 +98,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.getDeployments)
 );
 
+ComputeRouter.post(
+  "/rental-price",
+  forwardRequest(ComputeController.getRentalPrice)
+);
+
 export default ComputeRouter;

@@ -1578,13 +1578,40 @@ const saveDeployment = async (deployment: IDeployment) => {
 
 const getDeployments = async (userAddress: string, daoAddress?: string) => {
   const query: { userAddress: string; daoAddress?: string } = { userAddress };
-  
+
   if (daoAddress) {
     query.daoAddress = daoAddress;
   }
-  
+
   const deployments = await Deployment.find(query);
   return deployments;
+};
+
+const getRentalPrice = async (daoAddress: string) => {
+  if (!daoAddress) {
+    throw createHttpError.BadRequest("DAO address is required");
+  }
+
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+    const rentalPriceWei = await daoContract.rentalPrice();
+
+    const res = {
+      rentalPriceWei: rentalPriceWei.toString(),
+      rentalPriceEth: ethers.utils.formatEther(rentalPriceWei),
+    };
+
+    return res;
+  } catch (error: any) {
+    console.error("Error fetching rental price:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to get rental price: ${error.message}`
+    );
+  }
 };
 
 const ComputeService = {
@@ -1608,6 +1635,7 @@ const ComputeService = {
   completeUnlist,
   saveDeployment,
   getDeployments,
+  getRentalPrice,
 };
 
 export default ComputeService;
