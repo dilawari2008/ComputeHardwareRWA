@@ -7,16 +7,18 @@ document.head.appendChild(script);
 script.onload = async () => {
   // Get the transaction object (assuming you have it stored in a variable)
   const txObject = {
-    from: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-    to: "0xa16E02E87b7454126E5E10d957A927A7F5B5d2be",
-    data: "0x3610724e0000000000000000000000000000000000000000000000000000000000000035",
-    value: "530000000000000000",
-    gasLimit: ['0x0282b0'],
+    from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    to: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+    data: "0x3bdaf5de000000000000000000000000a16e02e87b7454126e5e10d957a927a7f5b5d2be",
+    gasLimit: {
+      type: "BigNumber",
+      hex: "0xee7c",
+    },
     gasPrice: {
       type: "BigNumber",
-      hex: "0x58e75f56",
+      hex: "0x5d0d794e",
     },
-    nonce: 0,
+    nonce: 4,
     chainId: 31337,
   };
 

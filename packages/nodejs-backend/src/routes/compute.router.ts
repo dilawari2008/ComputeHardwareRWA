@@ -41,4 +41,66 @@ ComputeRouter.get(
   forwardRequest(ComputeController.getDaoDetails)
 );
 
+ComputeRouter.post(
+  "/propose-new-rental-price",
+  forwardRequest(ComputeController.proposeNewRentalPrice)
+);
+
+ComputeRouter.post(
+  "/vote-on-proposal",
+  forwardRequest(ComputeController.voteOnProposal)
+);
+
+ComputeRouter.post(
+  "/current-proposal",
+  forwardRequest(ComputeController.getCurrentProposal)
+);
+
+ComputeRouter.post(
+  "/become-tenant",
+  forwardRequest(ComputeController.becomeTenant)
+);
+
+ComputeRouter.post(
+  "/dao-balance",
+  forwardRequest(ComputeController.getDaoBalance)
+);
+
+ComputeRouter.post(
+  "/is-dao-member",
+  forwardRequest(ComputeController.isDAOMember)
+);
+
+ComputeRouter.post("/is-tenant", forwardRequest(ComputeController.isTenant));
+
+ComputeRouter.post(
+  "/is-marketplace-owner",
+  forwardRequest(ComputeController.isMarketplaceOwner)
+);
+
+ComputeRouter.post(
+  "/unlist-compute",
+  forwardRequest(ComputeController.unlistCompute)
+);
+
+ComputeRouter.post(
+  "/complete-unlist",
+  forwardRequest(ComputeController.completeUnlist)
+);
+
+ComputeRouter.post(
+  "/save-deployment",
+  forwardRequest(ComputeController.saveDeployment)
+);
+
+ComputeRouter.post(
+  "/get-deployments",
+  forwardRequest(ComputeController.getDeployments)
+);
+
+ComputeRouter.post(
+  "/rental-price",
+  forwardRequest(ComputeController.getRentalPrice)
+);
+
 export default ComputeRouter;

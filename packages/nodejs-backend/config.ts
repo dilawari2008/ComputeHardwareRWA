@@ -30,6 +30,9 @@ const Config = {
     jwt: process.env.PINATA_JWT || "",
     gateway: process.env.PINATA_GATEWAY || "",
   },
+  mongo: {
+    url: process.env.MONGO_URL || "",
+  },
 };
 
 export default Config;

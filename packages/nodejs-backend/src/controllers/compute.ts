@@ -116,6 +116,180 @@ const getDaoDetails = async (req: Request, res: Response) => {
   }
 };
 
+const proposeNewRentalPrice = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.proposeNewRentalPrice(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in proposeNewRentalPrice controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const voteOnProposal = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.voteOnProposal(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in voteOnProposal controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const getCurrentProposal = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getCurrentProposal(req.body.daoAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getCurrentProposal controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const becomeTenant = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.becomeTenant(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in becomeTenant controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const getDaoBalance = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getDaoBalance(req.body.daoAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getDaoBalance controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const isDAOMember = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.isDAOMember(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in isDAOMember controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const isTenant = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.isTenant(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in isTenant controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const isMarketplaceOwner = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.isMarketplaceOwner(
+      req.body?.userAddress
+    );
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in isMarketplaceOwner controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const unlistCompute = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getUnlistApprovalTx(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in unlistCompute controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const completeUnlist = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.completeUnlist(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in completeUnlist controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const saveDeployment = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.saveDeployment(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in saveDeployment controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const getDeployments = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getDeployments(
+      req.body.userAddress,
+      req.body.daoAddress
+    );
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getDeployments controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const getRentalPrice = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getRentalPrice(req.body.daoAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getRentalPrice controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -125,6 +299,19 @@ const ComputeController = {
   getListing,
   getDaoTokenInfo,
   getDaoDetails,
+  proposeNewRentalPrice,
+  voteOnProposal,
+  getCurrentProposal,
+  becomeTenant,
+  getDaoBalance,
+  isDAOMember,
+  isTenant,
+  isMarketplaceOwner,
+  unlistCompute,
+  completeUnlist,
+  saveDeployment,
+  getDeployments,
+  getRentalPrice,
 };
 
 export default ComputeController;
