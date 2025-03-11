@@ -93,4 +93,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.saveDeployment)
 );
 
+ComputeRouter.post(
+  "/get-deployments",
+  forwardRequest(ComputeController.getDeployments)
+);
+
 export default ComputeRouter;

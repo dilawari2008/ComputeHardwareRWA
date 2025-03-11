@@ -259,6 +259,19 @@ const saveDeployment = async (req: Request, res: Response) => {
   }
 };
 
+const getDeployments = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getDeployments(req.body.userAddress, req.body.daoAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getDeployments controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -279,6 +292,7 @@ const ComputeController = {
   unlistCompute,
   completeUnlist,
   saveDeployment,
+  getDeployments,
 };
 
 export default ComputeController;

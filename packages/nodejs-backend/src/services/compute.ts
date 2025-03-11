@@ -1576,6 +1576,17 @@ const saveDeployment = async (deployment: IDeployment) => {
   return deploymentRes;
 };
 
+const getDeployments = async (userAddress: string, daoAddress?: string) => {
+  const query: { userAddress: string; daoAddress?: string } = { userAddress };
+  
+  if (daoAddress) {
+    query.daoAddress = daoAddress;
+  }
+  
+  const deployments = await Deployment.find(query);
+  return deployments;
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -1596,6 +1607,7 @@ const ComputeService = {
   getUnlistApprovalTx,
   completeUnlist,
   saveDeployment,
+  getDeployments,
 };
 
 export default ComputeService;
