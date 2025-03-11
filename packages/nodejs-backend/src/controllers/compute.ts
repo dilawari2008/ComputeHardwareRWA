@@ -220,6 +220,32 @@ const isMarketplaceOwner = async (req: Request, res: Response) => {
   }
 };
 
+const unlistCompute = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getUnlistApprovalTx(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in unlistCompute controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+const completeUnlist = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.completeUnlist(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in completeUnlist controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -237,6 +263,8 @@ const ComputeController = {
   isDAOMember,
   isTenant,
   isMarketplaceOwner,
+  unlistCompute,
+  completeUnlist,
 };
 
 export default ComputeController;

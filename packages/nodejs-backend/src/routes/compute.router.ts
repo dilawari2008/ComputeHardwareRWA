@@ -78,4 +78,14 @@ ComputeRouter.post(
   forwardRequest(ComputeController.isMarketplaceOwner)
 );
 
+ComputeRouter.post(
+  "/unlist-compute",
+  forwardRequest(ComputeController.unlistCompute)
+);
+
+ComputeRouter.post(
+  "/complete-unlist",
+  forwardRequest(ComputeController.completeUnlist)
+);
+
 export default ComputeRouter;

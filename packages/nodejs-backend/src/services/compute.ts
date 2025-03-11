@@ -1344,6 +1344,226 @@ const isMarketplaceOwner = async (userAddress: string) => {
   }
 };
 
+interface IUnlockNFTReq {
+  userAddress: string;
+  daoAddress: string;
+}
+
+const getUnlistApprovalTx = async (req: IUnlockNFTReq) => {
+  const { userAddress, daoAddress } = req;
+
+  if (!userAddress || !daoAddress) {
+    throw createHttpError.BadRequest(
+      "User address and DAO address are required"
+    );
+  }
+
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+    const tokenContractAddress = await daoContract.TOKEN_CONTRACT();
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      RWA_TOKEN_ABI,
+      provider
+    );
+
+    const totalSupply = await tokenContract.totalSupply();
+    const userBalance = await tokenContract.balanceOf(userAddress);
+
+    if (!userBalance.eq(totalSupply)) {
+      throw createHttpError.BadRequest(
+        `You must own all tokens to unlock the NFT. You own ${userBalance.toString()} of ${totalSupply.toString()} tokens.`
+      );
+    }
+
+    const approvedAmount = await tokenContract.allowance(
+      userAddress,
+      daoAddress
+    );
+
+    if (approvedAmount.gte(totalSupply)) {
+      return {
+        needsApproval: false,
+        message: "Tokens are already approved. Proceed to unlocking the NFT.",
+      };
+    }
+
+    const tokenInterface = new ethers.utils.Interface(RWA_TOKEN_ABI);
+    const approveData = tokenInterface.encodeFunctionData("approve", [
+      daoAddress,
+      totalSupply,
+    ]);
+
+    const approveGasEstimate = await provider.estimateGas({
+      from: userAddress,
+      to: tokenContractAddress,
+      data: approveData,
+    });
+
+    const nonce = await provider.getTransactionCount(userAddress);
+    const gasPrice = await provider.getGasPrice();
+    const network = await provider.getNetwork();
+
+    const approveTx = {
+      from: userAddress,
+      to: tokenContractAddress,
+      data: approveData,
+      gasLimit: approveGasEstimate,
+      gasPrice,
+      nonce,
+      chainId: network.chainId,
+    };
+
+    return {
+      needsApproval: true,
+      tx: approveTx,
+      totalSupply: totalSupply.toString(),
+      message: "Approve token transfer to DAO contract before unlocking NFT",
+    };
+  } catch (error: any) {
+    console.error("Error preparing approval transaction:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to prepare approval transaction: ${error.message}`
+    );
+  }
+};
+
+const completeUnlist = async (req: IUnlockNFTReq) => {
+  const { userAddress, daoAddress } = req;
+
+  if (!userAddress || !daoAddress) {
+    throw createHttpError.BadRequest(
+      "User address and DAO address are required"
+    );
+  }
+
+  const provider = new ethers.providers.JsonRpcProvider(
+    Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
+  );
+
+  try {
+    const marketplaceAddress =
+      Config.contractAddress[(process.env.CHAIN as EChain) || EChain.hardhat]
+        .marketplace;
+
+    // Check if marketplace owner
+    const marketplaceContract = new ethers.Contract(
+      marketplaceAddress ||
+        Config.contractAddress[(process.env.CHAIN as EChain) || EChain.hardhat]
+          .marketplace,
+      MARKETPLACE_ABI,
+      provider
+    );
+
+    const marketplaceOwner = await marketplaceContract.owner();
+    if (marketplaceOwner.toLowerCase() !== userAddress.toLowerCase()) {
+      throw createHttpError.BadRequest(
+        "Only the marketplace owner can remove the listing"
+      );
+    }
+
+    // Check token approval
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+    const tokenContractAddress = await daoContract.TOKEN_CONTRACT();
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      RWA_TOKEN_ABI,
+      provider
+    );
+
+    const totalSupply = await tokenContract.totalSupply();
+    const approvedAmount = await tokenContract.allowance(
+      userAddress,
+      daoAddress
+    );
+
+    if (approvedAmount.lt(totalSupply)) {
+      throw createHttpError.BadRequest(
+        `You must approve the DAO to transfer all tokens first. Currently approved: ${approvedAmount.toString()} of ${totalSupply.toString()} needed.`
+      );
+    }
+
+    // Prepare transactions
+    const nonce = await provider.getTransactionCount(userAddress);
+    const gasPrice = await provider.getGasPrice();
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+
+    // 1. Unlock NFT transaction
+    const daoInterface = new ethers.utils.Interface(RWADAO_ABI);
+    const unlockData = daoInterface.encodeFunctionData("unlockNFT", []);
+
+    const unlockGasEstimate = await provider.estimateGas({
+      from: userAddress,
+      to: daoAddress,
+      data: unlockData,
+    });
+
+    const unlockTx = {
+      from: userAddress,
+      to: daoAddress,
+      data: unlockData,
+      gasLimit: unlockGasEstimate,
+      gasPrice,
+      nonce,
+      chainId,
+    };
+
+    // 2. Remove listing transaction
+    const marketplaceInterface = new ethers.utils.Interface(MARKETPLACE_ABI);
+    const removeData = marketplaceInterface.encodeFunctionData(
+      "removeListing",
+      [daoAddress]
+    );
+
+    const removeGasEstimate = await provider.estimateGas({
+      from: userAddress,
+      to:
+        marketplaceAddress ||
+        Config.contractAddress[(process.env.CHAIN as EChain) || EChain.hardhat]
+          .marketplace,
+      data: removeData,
+    });
+
+    const removeTx = {
+      from: userAddress,
+      to:
+        marketplaceAddress ||
+        Config.contractAddress[(process.env.CHAIN as EChain) || EChain.hardhat]
+          .marketplace,
+      data: removeData,
+      gasLimit: removeGasEstimate,
+      gasPrice,
+      nonce: nonce + 1,
+      chainId,
+    };
+
+    return {
+      transactions: [
+        {
+          tx: unlockTx,
+          description: "Step 1: Unlock NFT by burning all tokens",
+        },
+        {
+          tx: removeTx,
+          description: "Step 2: Remove listing from marketplace",
+        },
+      ],
+      message:
+        "Execute these transactions in sequence to unlock the NFT and remove the listing",
+    };
+  } catch (error: any) {
+    console.error("Error preparing unlisting transactions:", error);
+    throw createHttpError.InternalServerError(
+      `Failed to prepare unlisting transactions: ${error.message}`
+    );
+  }
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -1361,6 +1581,8 @@ const ComputeService = {
   isDAOMember,
   isTenant,
   isMarketplaceOwner,
+  getUnlistApprovalTx,
+  completeUnlist,
 };
 
 export default ComputeService;
