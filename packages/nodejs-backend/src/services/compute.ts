@@ -13,6 +13,8 @@ import { MARKETPLACE_ABI } from "@/common/constants/abi/marketplace.abi";
 import { RWADAO_ABI } from "@/common/constants/abi/rwa-dao.abi";
 import { RWA_TOKEN_ABI } from "@/common/constants/abi/token";
 import { RWA_NFT_ABI } from "@/common/constants/abi/nft.abi";
+import { IDeployment } from "@/interfaces/model";
+import { Deployment } from "@/db/models/deployment";
 
 const provider = new ethers.providers.JsonRpcProvider(
   Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
@@ -1564,6 +1566,16 @@ const completeUnlist = async (req: IUnlockNFTReq) => {
   }
 };
 
+const saveDeployment = async (deployment: IDeployment) => {
+  const deploymentRes = await Deployment.findOneAndUpdate(
+    { userAddress: deployment.userAddress, daoAddress: deployment.daoAddress },
+    deployment,
+    { new: true, upsert: true }
+  );
+
+  return deploymentRes;
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -1583,6 +1595,7 @@ const ComputeService = {
   isMarketplaceOwner,
   getUnlistApprovalTx,
   completeUnlist,
+  saveDeployment,
 };
 
 export default ComputeService;

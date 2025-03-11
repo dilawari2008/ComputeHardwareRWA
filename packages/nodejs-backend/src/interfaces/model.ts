@@ -18,3 +18,9 @@ export interface IUser extends IMongooseDocument {
   hash: string;
   salt: string;
 }
+
+export interface IDeployment extends IMongooseDocument {
+  userAddress: string;
+  daoAddress: string;
+  script: string;
+}

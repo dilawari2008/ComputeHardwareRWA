@@ -88,4 +88,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.completeUnlist)
 );
 
+ComputeRouter.post(
+  "/save-deployment",
+  forwardRequest(ComputeController.saveDeployment)
+);
+
 export default ComputeRouter;

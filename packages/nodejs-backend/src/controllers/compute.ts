@@ -246,6 +246,19 @@ const completeUnlist = async (req: Request, res: Response) => {
   }
 };
 
+const saveDeployment = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.saveDeployment(req.body);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in saveDeployment controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -265,6 +278,7 @@ const ComputeController = {
   isMarketplaceOwner,
   unlistCompute,
   completeUnlist,
+  saveDeployment,
 };
 
 export default ComputeController;
