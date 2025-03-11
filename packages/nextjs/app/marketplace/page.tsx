@@ -1,49 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { HardwareCard } from "~~/components/design/HardwareCard";
+import Api from "~~/utils/api";
+
+export interface Hardware {
+  id: number;
+  name: string;
+  specs: string;
+  location: string;
+  imageUrl: string;
+}
 
 const Marketplace = () => {
+  const [hardware, setHardware] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const hardwareData = [
-    {
-      id: 1,
-      name: "NVIDIA A100",
-      specs: "NVIDIA A100 80GB",
-      location: "US East",
-      imageUrl: "/path/to/nvidia-a100.jpg",
-    },
-    {
-      id: 2,
-      name: "AMD MI250X",
-      specs: "AMD Instinct MI250X 128GB",
-      location: "EU Central",
-      imageUrl: "/path/to/amd-mi250x.jpg",
-    },
-    {
-      id: 3,
-      name: "Google TPU v4",
-      specs: "Google TPU v4 64GB",
-      location: "Asia Pacific",
-      imageUrl: "/path/to/google-tpu-v4.jpg",
-    },
-    {
-      id: 4,
-      name: "Intel Gaudi 2",
-      specs: "Intel Gaudi 2 96GB",
-      location: "US West",
-      imageUrl: "/path/to/intel-gaudi-2.jpg",
-    },
-  ];
+  // Fetch hardware data on component mount
+  useEffect(() => {
+    const fetchHardware = async () => {
+      try {
+        const data = await Api.get("/listing");
+        setHardware(data?.data); // Assuming the API returns an array of Hardware objects
+      } catch (err) {
+        setError("Failed to fetch hardware listings. Please try again later.");
+        console.error("Error fetching hardware:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const filteredHardware = hardwareData.filter(
-    hardware =>
-      hardware.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hardware.specs.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hardware.location.toLowerCase().includes(searchTerm.toLowerCase()),
+    fetchHardware();
+  }, []); // Empty dependency array ensures the effect runs only once on mount
+
+  const filteredHardware = hardware.filter(
+    item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.specs.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.location.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        <p>{error}</p>
+      </div>
+    );
+  }
   return (
     <main className="flex-1 mx-auto p-4" style={{ width: "80vw", height: "100vh" }}>
       <h1 className="text-3xl font-bold mb-4 mt-4">Compute Hardware Marketplace</h1>

@@ -224,7 +224,7 @@ const ListHardware = () => {
               </div>
               <div>
                 <label htmlFor="tokenPrice" className="block text-sm font-medium text-gray-700">
-                  Token Price (USD)
+                  Token Price (ETH)
                 </label>
                 <Controller
                   name="tokenPrice"

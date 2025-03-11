@@ -26,14 +26,11 @@ const Navbar = () => {
           <Link href="/" className="text-gray-600 hover:text-gray-800 text-lg font-medium transition-colors">
             Home
           </Link>
-          <a href="#" className="text-gray-600 hover:text-gray-800 text-lg font-medium transition-colors">
+          <Link href="/marketplace" className="text-gray-600 hover:text-gray-800 text-lg font-medium transition-colors">
             Marketplace
-          </a>
+          </Link>
           <a href="#" className="text-gray-600 hover:text-gray-800 text-lg font-medium transition-colors">
             How It Works
-          </a>
-          <a href="#" className="text-gray-800 hover:text-gray-600 text-lg font-medium transition-colors">
-            Features
           </a>
         </div>
       </div>

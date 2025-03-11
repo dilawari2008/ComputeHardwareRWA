@@ -11,10 +11,7 @@ script.onload = async () => {
     to: "0xa16E02E87b7454126E5E10d957A927A7F5B5d2be",
     data: "0x3610724e0000000000000000000000000000000000000000000000000000000000000035",
     value: "530000000000000000",
-    gasLimit: {
-      type: "BigNumber",
-      hex: "0x0282b0",
-    },
+    gasLimit: ['0x0282b0'],
     gasPrice: {
       type: "BigNumber",
       hex: "0x58e75f56",
