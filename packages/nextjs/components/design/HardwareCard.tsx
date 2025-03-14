@@ -26,8 +26,8 @@ export const HardwareCard = ({ hardware }: HardwareCardProps) => {
     router.push(`/marketplace/hardware/${hardware?.daoAddress}`);
   };
   return (
-    <div className="bg-white rounded-lg shadow-md flex flex-col">
-      <div className="w-full h-64 mb-4">
+    <div className="bg-white rounded-lg shadow-md border-b border-gray-200 flex flex-col mb-4">
+      <div className="w-full h-64">
         {hardware?.image ? (
           <img src={hardware.image} alt={hardware.name} className="w-full h-full object-cover rounded-t-lg" />
         ) : (
@@ -36,19 +36,25 @@ export const HardwareCard = ({ hardware }: HardwareCardProps) => {
           </div>
         )}
       </div>
-      <div className="p-4 ">
+      <div className="p-4">
         <h3 className="text-lg font-semibold">{hardware.name}</h3>
-        <p className="text-gray-600">
-          Specs: {hardware.cpu} {hardware.memory}
-        </p>
-        <p className="text-gray-600">Location: {hardware.location}</p>
-        <button
-          onClick={handleViewDetails} // Add onClick handler
-          className="mt-4 bg-black text-white px-4 py-2 rounded"
-        >
-          View Details
-        </button>
+        <div className="flex justify-between items-center w-full mb-2">
+          <div className="text-gray-600">Specifications</div>
+          <div className="text-gray-600">
+            {hardware.cpu} {hardware.memory}
+          </div>
+        </div>
+        <div className="flex justify-between items-center w-full">
+          <div className="text-gray-600">Location</div>
+          <div className="text-gray-600">{hardware.location}</div>
+        </div>
       </div>
+      <button
+        onClick={handleViewDetails} // Add onClick handler
+        className="mt-2  bg-black text-white px-4 py-1 rounded-b-md  w-[100%] "
+      >
+        View Details
+      </button>
     </div>
   );
 };

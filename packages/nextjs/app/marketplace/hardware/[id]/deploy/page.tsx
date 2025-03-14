@@ -3,84 +3,87 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
+import { useAccount, useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
+import Modal from "~~/components/design/Modal";
 import Api from "~~/utils/api";
 
 export default function Deploy() {
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
   const params = useParams();
   const hardwareId = params.id as string; // Get the hardware ID from the URL
   const [hardware, setHardware] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState<string>(
-    `import numpy as np
-import tensorflow as tf
-
-# Define your ML model here
-model = tf.keras.Sequential([
-    tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.Dense(10, activation='softmax')
-])
-
-# Compile the model
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-
-# Train the model (in a real app)
-# model.fit(x_train, y_train, epochs=5)
-
-print("Model ready for training!")
-`,
-  );
-
-  const handleDeploy = () => {
+  const [code, setCode] = useState<string>(``);
+  const [hoursModalOpen, setHoursModalOpen] = useState(false);
+  const handleDeploy = async () => {
+    console.log("set deploy");
+    setHoursModalOpen(false);
     if (!code.trim()) {
       toast.error("Please enter code to deploy.");
       return;
     }
-    const heading = "Deployment Successfull";
-    const description = `Your code has been deployed to the ${hardware?.hardware?.name}.`;
-    // Use toast.custom to render a structured toast
-    toast.custom(
-      t => (
-        <div
-          className={`bg-white border border-gray-200 rounded-lg shadow-md p-4 max-w-sm transition-all ${
-            t.visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-lg font-semibold text-gray-800">{heading}</h4>
-            <button onClick={() => toast.dismiss(t.id)} className="text-gray-500 hover:text-gray-700">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+
+    if (!isConnected) {
+      toast.error("Please connect your wallet");
+      connect({ connector: injected() });
+      return;
+    }
+
+    try {
+      const response = await Api.post("/save-deployment", {
+        userAddress: address, // Replace with dynamic user address if available
+        daoAddress: hardware?.dao?.address,
+        script: code,
+      });
+
+      console.log("Deployment saved:", response.data);
+
+      const heading = "Deployment Successful";
+      const description = `Your code has been deployed to the ${hardware?.hardware?.name}.`;
+      // Use toast.custom to render a structured toast
+      toast.custom(
+        t => (
+          <div
+            className={`bg-white border border-gray-200 rounded-lg shadow-md p-4 max-w-sm transition-all ${
+              t.visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-lg font-semibold text-gray-800">{heading}</h4>
+              <button onClick={() => toast.dismiss(t.id)} className="text-gray-500 hover:text-gray-700">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="text-gray-600 text-sm mb-2">{description}</div>
           </div>
-          <div className="text-gray-600 text-sm mb-2">{description}</div>
-        </div>
-      ),
-      {
-        duration: 4000,
-        position: "bottom-right",
-      },
-    );
-    console.log("Deploying code:", code);
+        ),
+        {
+          duration: 4000,
+          position: "bottom-left", // Updated to bottom-left as per your earlier request
+        },
+      );
+    } catch (error) {
+      console.error("Error saving deployment:", error);
+      toast.error("Failed to deploy code. Please try again.");
+    }
   };
   useEffect(() => {
     const fetchHardware = async () => {
       try {
-        // Make API call using your Api utility
         const response = await Api.get<any>(`/dao-details?daoAddress=${hardwareId}`);
 
         console.log(response.data, "response");
-        // Since your interceptor returns just the data, we don't need response.data
         const data = response.data;
 
         setHardware(data);
@@ -94,6 +97,30 @@ print("Model ready for training!")
 
     fetchHardware();
   }, [hardwareId]);
+
+  useEffect(() => {
+    if (address) {
+      fetchDeployment();
+    }
+  }, [address]);
+
+  const fetchDeployment = async () => {
+    console.log(address, "address");
+    console.log(hardwareId, "hardwareId");
+    try {
+      const deploymentsResponse = await Api.post("/get-deployments", {
+        userAddress: address,
+        daoAddress: hardwareId,
+      });
+      if (deploymentsResponse.data && deploymentsResponse.data.length > 0) {
+        setCode(deploymentsResponse.data[0].script);
+      }
+      console.log(deploymentsResponse.data, "response");
+    } catch (err) {
+      toast.error("Failed to fetch deployments. Please try again later.");
+      console.error("Error fetching deployments:", err);
+    }
+  };
   const [activeTab, setActiveTab] = useState("Javascript");
 
   if (isLoading) {
@@ -118,9 +145,7 @@ print("Model ready for training!")
               <h2 className="text-3xl font-bold mb-2">Deploy Code</h2>
               <div className="text-gray-600">Write or paste your code to deploy to AMD MI250X</div>
             </div>
-            <div>
-              <div className="text-green-500 bg-green-100 inline-block px-2 pt-1 rounded">Rented</div>
-            </div>
+            <div>{/* <div className="text-green-500 bg-green-100 inline-block px-2 pt-1 rounded">Rented</div> */}</div>
           </div>
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -161,7 +186,10 @@ print("Model ready for training!")
             className="w-full h-[600px] p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <div className="flex justify-end">
-            <button onClick={handleDeploy} className="mt-4 bg-black text-lg text-white px-4 py-3 rounded">
+            <button
+              onClick={() => setHoursModalOpen(true)}
+              className="mt-4 bg-black text-lg text-white px-4 py-3 rounded"
+            >
               Deploy to Hardware
             </button>
           </div>
@@ -171,7 +199,7 @@ print("Model ready for training!")
       {/* Right Panel - Hardware Specs */}
       <div className="w-1/3 p-4">
         <div className="bg-white rounded-lg shadow-md p-9">
-          <h3 className="text-3xl mt-3 font-bold">Hardware Specs</h3>
+          <h3 className="text-3xl mt-3 font-bold">Hardware Specifications</h3>
           <p className="mb-4 text-gray-400">{hardware?.hardware?.name})</p>
           <div className="grid grid-cols-2 gap-y-2">
             <div className="text-gray-400 font-medium text-left text-lg">Hardware</div>
@@ -179,7 +207,9 @@ print("Model ready for training!")
               {hardware?.hardware?.name} {hardware?.hardware?.memory}
             </div>
             <div className="text-gray-400 font-medium text-left text-lg">Performance</div>
-            <div className="text-left text-xl">{hardware?.hardware?.performance}</div>
+            <div className="text-left text-xl">
+              {hardware?.hardware?.performance + " " + (hardware?.hardware?.memory || "")}
+            </div>
             <div className="text-gray-400 font-medium text-left text-lg">Location</div>
             <div className="text-left text-xl">{hardware?.hardware?.location}</div>
           </div>
@@ -203,6 +233,26 @@ print("Model ready for training!")
         </div>
       </div>
       <Toaster position="bottom-right" />
+      <Modal
+        isOpen={hoursModalOpen}
+        onClose={() => setHoursModalOpen(false)}
+        title="Deployment Config"
+        description="Select the number of hours you want to deploy your code for."
+      >
+        <div>
+          <h2>Deployment duration</h2>
+          <div className="flex flex-col gap-2">
+            <select className="w-full p-2 border bg-white border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="1">4 hours</option>
+              <option value="2">24 hours</option>
+              <option value="3">48 hours</option>
+            </select>
+            <button onClick={() => handleDeploy()} className="mt-4 bg-black text-lg text-white px-4 py-3 rounded">
+              Deploy to Hardware
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

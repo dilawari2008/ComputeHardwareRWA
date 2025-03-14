@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Api from "../../utils/api/index";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { useAccount, useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { hardwareSchema } from "~~/schema/hardware";
-import { useWeb3Store } from "~~/utils/web3Store";
 import { signAndSendTransaction } from "~~/utils/web3Utils";
 
 interface FormData {
@@ -24,6 +26,7 @@ const ListHardware = () => {
     formState: { errors },
     reset,
     setValue,
+    getValues,
   } = useForm({
     resolver: zodResolver(hardwareSchema),
     defaultValues: {
@@ -40,46 +43,41 @@ const ListHardware = () => {
   const [isImageLoading, setIsImageLoading] = React.useState<any>(); // Import Zustand store
   const [isLoading, setIsLoading] = React.useState<any>();
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const [isValidated, setIsValidated] = useState(false);
 
   const onSubmit = async (data: FormData) => {
-    const { isConnected, connectWallet, account } = useWeb3Store.getState(); // Get initial state from Zustand
-
-    if (!isConnected || !account) {
-      console.log("Wallet not connected, prompting MetaMask...");
-      try {
-        await connectWallet(); // Connect wallet
-      } catch (error) {
-        console.error("Failed to connect wallet:", error);
-        alert("Please connect your wallet to proceed.");
-        return;
-      }
-
-      // ✅ Wait for Zustand state update before proceeding
-      const updatedAccount = useWeb3Store.getState().account;
-      if (!updatedAccount) {
-        alert("Wallet connection failed. Please try again.");
-        return;
-      }
+    setIsValidated(true);
+    if (!isConnected) {
+      toast.error("Please connect your wallet");
+      connect({ connector: injected() });
+      return;
     }
 
-    // ✅ Use the updated state
-    const finalAccount = useWeb3Store.getState().account;
-    console.log("Connected wallet:", finalAccount);
-    console.log("Form submitted with data:", data);
-
     setIsLoading(true);
+    await listHardwareApi(data);
+  };
+
+  useEffect(() => {
+    if (address && isValidated) {
+      listHardwareApi(getValues());
+    }
+  }, [address]);
+
+  const listHardwareApi = async (data: any) => {
     try {
       // Prepare the payload according to the curl command
       const payload = {
         hardwareName: data.hardwareName,
         totalTokens: data.totalTokens,
-        tokenPrice: 0.01,
+        tokenPrice: Number(data.tokenPrice),
         rentalPrice: 0.02,
         imageUrl: imagePreview,
         cpu: data.cpu,
         memory: data.memory,
         location: data.location,
-        userAddress: finalAccount,
+        userAddress: address,
       };
 
       // const txObject = {
@@ -142,17 +140,17 @@ const ListHardware = () => {
       console.log("making api call to pinata...");
 
       // Make API call to upload the image using the Api utility
-      // const response = await Api.post("/upload-to-pinata", formData, {
-      //   headers: {
-      //     "Content-Type": "multipart/form-data",
-      //   },
-      // });
+      const response = await Api.post("/upload-to-pinata", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      // console.log("response api call to pinata...", response);
+      console.log("response api call to pinata...", response);
 
-      // const imageUrl = response?.data?.pinataUrl as any ?? "";
+      const imageUrl = (response?.data?.pinataUrl as any) ?? "";
 
-      const imageUrl = "https://gateway.pinata.cloud/ipfs/QmXATY6UTrAV8QpVDvJUmLjoLqpamjE1UVjEtW9BF7Ugwc";
+      // const imageUrl = "https://gateway.pinata.cloud/ipfs/QmXATY6UTrAV8QpVDvJUmLjoLqpamjE1UVjEtW9BF7Ugwc";
       setImagePreview(imageUrl);
     } catch (error: any) {
       console.error("Error uploading image:", error.message);
@@ -193,7 +191,7 @@ const ListHardware = () => {
                     type="text"
                     id="hardwareName"
                     className={`class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" ${errors.hardwareName ? "border-red-500" : ""}`}
-                    placeholder="Enter a descriptive name for your hardware."
+                    placeholder="Nvidia A100"
                   />
                 )}
               />
@@ -232,12 +230,11 @@ const ListHardware = () => {
                   render={({ field }) => (
                     <input
                       {...field}
-                      type="number"
+                      type="text"
                       id="tokenPrice"
-                      step="0.01"
                       className={`class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" ${errors.tokenPrice ? "border-red-500" : ""}`}
                       placeholder="Initial price per token in USD."
-                      onChange={e => field.onChange(parseFloat(e.target.value) || "")}
+                      onChange={e => field.onChange(e.target.value || "")}
                     />
                   )}
                 />
@@ -339,7 +336,7 @@ const ListHardware = () => {
                       type="text"
                       id="cpu"
                       className={`class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" ${errors.cpu ? "border-red-500" : ""}`}
-                      placeholder="CPU specifications."
+                      placeholder="Intel i7 quad core"
                     />
                   )}
                 />
@@ -358,7 +355,7 @@ const ListHardware = () => {
                       type="text"
                       id="memory"
                       className={`class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" ${errors.memory ? "border-red-500" : ""}`}
-                      placeholder="Memory specifications."
+                      placeholder="5GB RAM"
                     />
                   )}
                 />
@@ -380,7 +377,7 @@ const ListHardware = () => {
                     type="text"
                     id="location"
                     className={`class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" ${errors.location ? "border-red-500" : ""}`}
-                    placeholder="Physical location of the hardware."
+                    placeholder="EU West"
                   />
                 )}
               />

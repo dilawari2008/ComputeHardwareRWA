@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import KeyValueGrid from "./KeyValueGrid";
 import toast from "react-hot-toast";
+import { useAccount, useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import Api from "~~/utils/api";
-import { useWeb3Store } from "~~/utils/web3Store";
+import { signAndSendTransaction } from "~~/utils/web3Utils";
 
-const BuyTokenModal = ({ hardware }: any) => {
+const BuyTokenModal = ({ hardware, onClose }: any) => {
   const max = hardware?.token?.availableForSale || 0;
   const [tokenAmount, setTokenAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
 
   const handleBuyTokens = async () => {
     if (!tokenAmount || parseInt(tokenAmount) <= 0 || parseInt(tokenAmount) > max) {
@@ -15,40 +19,26 @@ const BuyTokenModal = ({ hardware }: any) => {
       return;
     }
 
-    const { isConnected, connectWallet, account } = useWeb3Store.getState(); // Get initial state from Zustand
-
-    if (!isConnected || !account) {
-      console.log("Wallet not connected, prompting MetaMask...");
-      try {
-        await connectWallet(); // Connect wallet
-      } catch (error) {
-        console.error("Failed to connect wallet:", error);
-        alert("Please connect your wallet to proceed.");
-        return;
-      }
-
-      const updatedAccount = useWeb3Store.getState().account;
-      if (!updatedAccount) {
-        alert("Wallet connection failed. Please try again.");
-        return;
-      }
+    if (!isConnected) {
+      connect({ connector: injected() });
     }
-
-    // ✅ Use the updated state
-    const finalAccount = useWeb3Store.getState().account;
-    console.log("Connected wallet:", finalAccount);
+    console.log("connected", address);
 
     setIsLoading(true);
     try {
-      const response = await Api.post("/compute/buy-tokens", {
+      const response = await Api.post("/buy-tokens", {
         numberOfTokens: parseInt(tokenAmount),
         daoAddress: hardware?.dao?.address,
-        userAddress: finalAccount,
+        userAddress: address,
       });
 
-      console.log("Buy Tokens TX:", response.data);
-      toast.success("Tokens purchased successfully!");
-      setTokenAmount(""); // Reset input after success
+      console.log("Buy Tokens TX:", response?.data?.tx);
+      const signTxn = await signAndSendTransaction(window.ethereum, response?.data?.tx);
+      if (signTxn) {
+        toast.success("Tokens purchased successfully!");
+        setTokenAmount(""); // Reset input after success
+        onClose();
+      }
     } catch (error) {
       console.error("Error buying tokens:", error);
       toast.error("Failed to buy tokens. Please try again.");
@@ -84,7 +74,7 @@ const BuyTokenModal = ({ hardware }: any) => {
       <KeyValueGrid
         items={[
           { key: "Available Tokens", value: hardware?.token?.availableForSale },
-          { key: "Token Price", value: `${hardware?.token?.tokenPrice} / token` },
+          { key: "Token Price", value: `${hardware?.token?.tokenPrice}` },
           { key: "Rental Price", value: `${hardware?.hardware?.rentalPrice}` },
           { key: "Total Cost", value: totalCost },
         ]}

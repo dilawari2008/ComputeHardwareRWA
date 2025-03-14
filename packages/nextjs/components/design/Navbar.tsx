@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import WalletConnect from "./WalletConnect";
+import { RainbowKitCustomConnectButton } from "../scaffold-eth";
 import { FiMenu, FiX } from "react-icons/fi";
 
 // Use Feather icons
@@ -15,21 +15,26 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-6 bg-white mx-4 shadow-sm">
+    <nav className="sticky top-0 z-10 flex items-center justify-between px-64 py-5 border-b-2 bg-white shadow-sm">
       {/* Left Side: Logo and Navigation Links - On Medium+ Screens */}
       <div className="flex items-center gap-8">
         {/* Logo */}
-        <div className="text-2xl font-bold text-gray-800 mr-8">RWA Hardware</div>
+        <Link href="/" className="text-xl font-bold text-gray-800 mr-8">
+          RWA Hardware
+        </Link>
 
         {/* Navigation Links - Hidden on Mobile, Shown on Medium+ Screens */}
         <div className="hidden md:flex items-center space-x-8">
-          <Link href="/" className="text-gray-600 hover:text-gray-800 text-lg font-medium transition-colors">
+          <Link href="/" className="text-gray-600 hover:text-gray-800 text-md  font-medium transition-colors">
             Home
           </Link>
-          <Link href="/marketplace" className="text-gray-600 hover:text-gray-800 text-lg font-medium transition-colors">
+          <Link
+            href="/marketplace"
+            className="text-gray-600 hover:text-gray-800 text-md  font-medium transition-colors"
+          >
             Marketplace
           </Link>
-          <a href="#" className="text-gray-600 hover:text-gray-800 text-lg font-medium transition-colors">
+          <a href="#" className="text-gray-600 hover:text-gray-800 text-md  font-medium transition-colors">
             How It Works
           </a>
         </div>
@@ -37,10 +42,10 @@ const Navbar = () => {
 
       {/* Right Side: Buttons - Hidden on Mobile, Shown on Medium+ Screens */}
       <div className="hidden md:flex items-center space-x-4">
-        <WalletConnect />
+        <RainbowKitCustomConnectButton />
         <Link
           href="/create-listing"
-          className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-lg font-medium transition-colors"
+          className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-sm  font-medium transition-colors"
         >
           List Your Hardware
         </Link>
@@ -96,10 +101,10 @@ const Navbar = () => {
             >
               Features
             </a>
-            <WalletConnect />
+            <RainbowKitCustomConnectButton />
             <Link
               href="/create-listing"
-              className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-lg font-medium transition-colors"
+              className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-md  font-medium transition-colors"
               onClick={toggleMenu}
             >
               List Your Hardware

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useAccount, useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { HardwareActionPanel } from "~~/components/design/HardwareActionPanel";
 import { HardwareDetailsMain } from "~~/components/design/HardwareDetailsMain";
 import Api from "~~/utils/api";
@@ -12,80 +14,85 @@ import { useWeb3Store } from "~~/utils/web3Store";
 export default function HardwareDetails() {
   const params = useParams();
   const hardwareId = params.id as string;
-  const [hardware, setHardware] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDaoMember, setIsDaoMember] = useState<boolean | null>(null);
-  const [isTenant, setIsTenant] = useState<boolean | null>(null);
-  const [isMarketplaceOwner, setIsMarketplaceOwner] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const fetchHardwareAndInfo = async () => {
-      try {
-        const { isConnected, connectWallet, account } = useWeb3Store.getState(); // Get initial state from Zustand
-
-        if (!isConnected || !account) {
-          console.log("Wallet not connected, prompting MetaMask...");
-          try {
-            await connectWallet(); // Connect wallet
-          } catch (error) {
-            console.error("Failed to connect wallet:", error);
-            alert("Please connect your wallet to proceed.");
-            return;
-          }
-
-          // ✅ Wait for Zustand state update before proceeding
-          const updatedAccount = useWeb3Store.getState().account;
-          if (!updatedAccount) {
-            alert("Wallet connection failed. Please try again.");
-            return;
-          }
-        }
-
-        // ✅ Use the updated state
-        const finalAccount = useWeb3Store.getState().account;
-        console.log("Connected wallet:", finalAccount);
-        // Make all the API calls simultaneously using Promise.all
-        const hardwareResponse = await Api.get<any>(`/dao-details?daoAddress=${hardwareId}`);
-        setHardware(hardwareResponse.data);
-
-        // Then, check if the user is a DAO member
-        const daoMemberResponse = await Api.post<any>("/api/compute/is-dao-member", {
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { setIsDaoMember, setIsTenant, setIsMarketplaceOwner, setHardware, setCurrentProposal, setRentalPrice } =
+    useWeb3Store();
+  const fetchHardwareAndInfo = async () => {
+    try {
+      const hardwareResponse = await Api.get<any>(`/dao-details?daoAddress=${hardwareId}`);
+      setHardware(hardwareResponse.data);
+      if (address) {
+        const daoMemberResponse = await Api.post<any>("/is-dao-member", {
           daoAddress: hardwareResponse.data.dao.address,
-          userAddress: finalAccount, // Example user address
+          userAddress: address, // Example user address
         });
         setIsDaoMember(daoMemberResponse.data.isMember);
-        console.log(isDaoMember);
-        // After that, check if the user is a tenant
-        const tenantResponse = await Api.post<any>("/api/compute/is-tenant", {
+
+        if (daoMemberResponse.data.isMember) {
+          const proposalResponse = await Api.post("/current-proposal", {
+            daoAddress: hardwareResponse.data.dao.address,
+          });
+          setCurrentProposal(proposalResponse.data);
+          console.log("Current Proposal:", proposalResponse.data);
+        }
+
+        const rentalPriceResponse = await Api.post<any>("/rental-price", {
           daoAddress: hardwareResponse.data.dao.address,
-          userAddress: finalAccount, // Example user address
+        });
+
+        console.log("Rental Price:", rentalPriceResponse.data);
+        setRentalPrice(rentalPriceResponse.data?.rentalPriceEth);
+
+        const tenantResponse = await Api.post<any>("/is-tenant", {
+          daoAddress: hardwareResponse.data.dao.address,
+          userAddress: address, // Example user address
         });
         setIsTenant(tenantResponse.data.isTenant);
-        console.log(isTenant);
-        // Finally, check if the user is a marketplace owner
-        const marketplaceOwnerResponse = await Api.post<any>("/api/compute/is-marketplace-owner", {
-          userAddress: finalAccount,
-        });
-        setIsMarketplaceOwner(marketplaceOwnerResponse.data.isOwner);
-        console.log(isMarketplaceOwner);
-      } catch (err) {
-        // Set error message if something goes wrong
-        setError("Failed to fetch hardware details. Please try again later.");
-        console.error("Error fetching hardware details:", err);
-      } finally {
-        setIsLoading(false); // Stop loading
-      }
-    };
+        console.log("Is Tenant:", tenantResponse.data.isTenant);
 
-    fetchHardwareAndInfo(); // Call the function
-  }, [hardwareId]);
+        if (!tenantResponse.data.isTenant) {
+          const marketplaceOwnerResponse = await Api.post<any>("/is-marketplace-owner", {
+            userAddress: address,
+          });
+          setIsMarketplaceOwner(marketplaceOwnerResponse.data.isOwner);
+          console.log("Is Marketplace Owner:", marketplaceOwnerResponse.data.isOwner);
+        }
+      } else {
+        setIsDaoMember(false);
+        setIsTenant(false);
+        setIsMarketplaceOwner(false);
+      }
+      setIsLoading(false);
+      // Make all the API calls simultaneously using Promise.all
+    } catch (err) {
+      setError("Failed to fetch hardware details. Please try again later.");
+      console.error("Error fetching hardware details:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!isConnected) {
+      console.log("connecting..");
+      connect({ connector: injected() });
+    }
+  }, []);
+
+  const refetch = () => {
+    fetchHardwareAndInfo();
+  };
+
+  useEffect(() => {
+    fetchHardwareAndInfo();
+  }, [address]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading..</div>;
   }
 
-  if (error || !hardware) {
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-500">
         <p>{error || "Hardware not found."}</p>
@@ -94,11 +101,11 @@ export default function HardwareDetails() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white mb-6">
       <main className="flex-1 w-full p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <HardwareDetailsMain hardware={hardware} />
-          <HardwareActionPanel hardware={hardware} />
+        <div className="flex flex-col md:flex-row gap-6">
+          <HardwareDetailsMain refetch={refetch} />
+          <HardwareActionPanel refetch={refetch} />
         </div>
       </main>
     </div>

@@ -1,52 +1,44 @@
 import React, { useState } from "react";
 import KeyValueGrid from "./KeyValueGrid";
 import toast from "react-hot-toast";
+import { useAccount, useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import Api from "~~/utils/api";
 import { useWeb3Store } from "~~/utils/web3Store";
+import { signAndSendTransaction } from "~~/utils/web3Utils";
 
-const PraposeRentPrieModal = ({ hardware }: any) => {
-  const [newRentalPrice, setNewRentalPrice] = useState("");
+const PraposeRentPrieModal = ({ hardware, onClose }: any) => {
   const [isLoading, setIsLoading] = useState(false);
-
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { rentalPrice } = useWeb3Store();
+  const [newRentalPrice, setNewRentalPrice] = useState(rentalPrice);
   const handleSubmitProposal = async () => {
     if (!newRentalPrice || parseFloat(newRentalPrice) <= 0) {
       toast.error("Please enter a valid rental price (greater than 0).");
       return;
     }
-    const { isConnected, connectWallet, account } = useWeb3Store.getState(); // Get initial state from Zustand
-
-    if (!isConnected || !account) {
-      console.log("Wallet not connected, prompting MetaMask...");
-      try {
-        await connectWallet(); // Connect wallet
-      } catch (error) {
-        console.error("Failed to connect wallet:", error);
-        alert("Please connect your wallet to proceed.");
-        return;
-      }
-
-      const updatedAccount = useWeb3Store.getState().account;
-      if (!updatedAccount) {
-        alert("Wallet connection failed. Please try again.");
-        return;
-      }
+    if (!isConnected) {
+      connect({ connector: injected() });
+      return;
     }
-
-    // ✅ Use the updated state
-    const finalAccount = useWeb3Store.getState().account;
-    console.log("Connected wallet:", finalAccount);
+    console.log("connected", address);
 
     setIsLoading(true);
     try {
-      const response = await Api.post("/compute/propose-new-rental-price", {
+      const response = await Api.post("/propose-new-rental-price", {
         daoAddress: hardware?.dao?.address,
-        userAddress: finalAccount,
+        userAddress: address,
         newRentalPrice: parseFloat(newRentalPrice),
       });
 
       console.log("Proposal TX:", response.data);
-      toast.success("Proposal submitted successfully!");
-      setNewRentalPrice("");
+      const signTxn = await signAndSendTransaction(window.ethereum, response?.data?.tx);
+      if (signTxn) {
+        toast.success("Proposal submitted successfully!");
+        setNewRentalPrice(""); // Reset input after success
+        onClose();
+      }
     } catch (error) {
       console.error("Error submitting proposal:", error);
       toast.error("Failed to submit proposal. Please try again.");
@@ -73,7 +65,12 @@ const PraposeRentPrieModal = ({ hardware }: any) => {
           placeholder="Enter rental price"
         />
       </div>
-      <KeyValueGrid items={[{ key: "Current Price", value: `${hardware?.hardware?.rentalPrice} ETH` }]} />
+      <KeyValueGrid
+        items={[
+          { key: "Current Price", value: `${hardware?.hardware?.rentalPrice}` },
+          { key: "Smart Price Suggestion", value: `${rentalPrice} ETH / day` },
+        ]}
+      />
       <div className="mt-2 ml-4 text-md text-gray-400">Your proposal requires a 60% majority vote to pass.</div>
       <div className="mt-6 flex justify-end gap-4">
         <button className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50">
