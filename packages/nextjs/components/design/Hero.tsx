@@ -26,9 +26,12 @@ const Hero = () => {
         >
           Explore Marketplace
         </Link>
-        <button className="md:px-10 px-10 py-4 md:py-3 bg-white text-gray-900 border border-gray-300 rounded hover:bg-gray-100">
+        <Link
+          href="/create-listing"
+          className="md:px-10 px-10 py-4 md:py-3 bg-white text-gray-900 border border-gray-300 rounded hover:bg-gray-100"
+        >
           List Your Hardware
-        </button>
+        </Link>
       </div>
     </section>
   );
