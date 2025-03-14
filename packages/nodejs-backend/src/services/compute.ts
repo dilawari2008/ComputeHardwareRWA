@@ -706,6 +706,7 @@ const getDaoDetails = async (daoAddress: string) => {
         created: hardwareMetadata?.created || "5/15/2023",
         status: isAvailable ? "Available" : "Rented",
         rentalPrice: `${ethers.utils.formatEther(rentalPrice)} ETH / day`,
+        image: hardwareMetadata?.image ?? ""
       },
       token: {
         name: tokenName || "NVIDIA A100 Token",
