@@ -59,29 +59,31 @@ const Marketplace = () => {
     );
   }
   return (
-    <div className="flex justify-center items-center w-full">
+    <div className="flex justify-center items-center w-full bg-white">
       <main className="flex-1 mx-10 py-4 mb-4" style={{ width: "80vw", minHeight: "100vh" }}>
-        <h1 className="text-3xl font-bold mb-4 mt-4">Compute Hardware Marketplace</h1>
-        <p className="text-gray-600 mb-6">
-          Browse all available high-performance computing hardware for fractional ownership and rental.
-        </p>
-        <div className="mb-12 flex items-center justify-between w-full">
-          <input
-            type="text"
-            placeholder="Search hardware..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="p-2 border rounded"
-            style={{ width: "80%" }}
-          />
-          <Link
-            href="/create-listing"
-            className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-lg font-medium transition-colors"
-          >
-            List Your Hardware
-          </Link>
+        <div className="opacity-0 transform translate-y-10 transition-all duration-1000 ease-out animate-fadeInUp">
+          <h1 className="text-3xl font-bold mb-4 mt-4">Compute Hardware Marketplace</h1>
+          <p className="text-gray-600 mb-6">
+            Browse all available high-performance computing hardware for fractional ownership and rental.
+          </p>
+          <div className="mb-12 flex items-center justify-between w-full">
+            <input
+              type="text"
+              placeholder="Search hardware..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="p-2 border rounded"
+              style={{ width: "80%" }}
+            />
+            <Link
+              href="/create-listing"
+              className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-lg font-medium transition-colors"
+            >
+              List Your Hardware
+            </Link>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out animate-fadeInUp">
           {filteredHardware.map(hardware => (
             <HardwareCard key={hardware.id} hardware={hardware} />
           ))}

@@ -237,83 +237,85 @@ export const HardwareDetailsMain = ({ refetch }: any) => {
     }
   };
   return (
-    <div className="w-2/3 border-[1px] border-gray-200 rounded-lg">
-      <div className="bg-gray-100 rounded-lg shadow-md flex items-center justify-center" style={{ height: "70vh" }}>
-        {hardware?.hardware?.image ? (
-          <img
-            src={hardware?.hardware?.image}
-            alt={hardware?.hardware?.name}
-            className="w-full h-full object-cover rounded-t-lg"
-          />
-        ) : (
-          <div className="w-64 h-64 flex items-center justify-center">
-            <span className="text-gray-500">🖥️</span> {/* Placeholder for image */}
-          </div>
-        )}
-      </div>
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            {hardware?.hardware?.status === "Available" ? (
-              <p className="text-green-500 bg-green-100 inline-block px-4 py-1 rounded-full">Available</p>
-            ) : (
-              <p className="text-yellow-500 bg-yellow-100 inline-block px-4 py-1 rounded-full">Rented</p>
-            )}
-            <h2 className="text-2xl font-bold mb-2">{hardware?.hardware?.name}</h2>
-          </div>
-          <div onClick={() => handleCopy(hardware.dao.address)} className="cursor-pointer">
-            <h1 className="text-gray-600 text-right">DAO Address</h1>
-            <h2 className="text-md font-bold mb-2">
-              {hardware?.dao?.address?.length > 16
-                ? `${hardware.dao.address.substring(0, 16)}...`
-                : hardware?.dao?.address}
-            </h2>
-          </div>
+    <>
+      <div className="w-2/3 border-[1px] border-gray-200 rounded-lg opacity-0 transform translate-y-10 transition-all duration-1000 ease-out animate-fadeInUp">
+        <div className="bg-gray-100 rounded-lg shadow-md flex items-center justify-center" style={{ height: "70vh" }}>
+          {hardware?.hardware?.image ? (
+            <img
+              src={hardware?.hardware?.image}
+              alt={hardware?.hardware?.name}
+              className="w-full h-full object-cover rounded-t-lg"
+            />
+          ) : (
+            <div className="w-64 h-64 flex items-center justify-center">
+              <span className="text-gray-500">🖥️</span> {/* Placeholder for image */}
+            </div>
+          )}
         </div>
-        <ul
-          className="flex ml-3 rounded-lg flex-wrap text-sm font-medium text-center dark:text-gray-400 mt-4 w-full"
-          role="tablist"
-        >
-          {[
-            { name: "Specification", enabled: true },
-            { name: "Token Info", enabled: true },
-            { name: "DAO", enabled: true },
-            { name: "RWA Info", enabled: true },
-            ...(isDaoMember || isMarketplaceOwner ? [{ name: "Governance", enabled: true }] : []),
-          ].map((tab: any) => (
-            <li key={tab.name} className="bg-gray-100">
-              <button
-                onClick={() => tab.enabled && setActiveTab(tab.name)}
-                className={`inline-block p-2 m-1 rounded-lg text-md transition-colors ${
-                  activeTab === tab.name && tab.enabled
-                    ? "text-blue-600 bg-white active dark:bg-gray-800 dark:text-blue-500"
-                    : tab.enabled
-                      ? "hover:text-gray-600 hover:bg-gray-50 bg-gray-100"
-                      : "text-gray-400 cursor-not-allowed dark:text-gray-500"
-                }`}
-                role="tab"
-                aria-selected={activeTab === tab.name}
-                aria-controls={`${tab.name.toLowerCase().replace(/\s/g, "-")}-panel`}
-                disabled={!tab.enabled}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              {hardware?.hardware?.status === "Available" ? (
+                <p className="text-green-500 bg-green-100 inline-block px-4 py-1 rounded-full">Available</p>
+              ) : (
+                <p className="text-yellow-500 bg-yellow-100 inline-block px-4 py-1 rounded-full">Rented</p>
+              )}
+              <h2 className="text-2xl font-bold mb-2">{hardware?.hardware?.name}</h2>
+            </div>
+            <div onClick={() => handleCopy(hardware.dao.address)} className="cursor-pointer">
+              <h1 className="text-gray-600 text-right">DAO Address</h1>
+              <h2 className="text-md font-bold mb-2">
+                {hardware?.dao?.address?.length > 16
+                  ? `${hardware.dao.address.substring(0, 16)}...`
+                  : hardware?.dao?.address}
+              </h2>
+            </div>
+          </div>
+          <ul
+            className="flex ml-3 rounded-lg flex-wrap text-sm font-medium text-center dark:text-gray-400 mt-4 w-full"
+            role="tablist"
+          >
+            {[
+              { name: "Specification", enabled: true },
+              { name: "Token Info", enabled: true },
+              { name: "DAO", enabled: true },
+              { name: "RWA Info", enabled: true },
+              ...(isDaoMember || isMarketplaceOwner ? [{ name: "Governance", enabled: true }] : []),
+            ].map((tab: any) => (
+              <li key={tab.name} className="bg-gray-100">
+                <button
+                  onClick={() => tab.enabled && setActiveTab(tab.name)}
+                  className={`inline-block p-2 m-1 rounded-lg text-md transition-colors ${
+                    activeTab === tab.name && tab.enabled
+                      ? "text-blue-600 bg-white active dark:bg-gray-800 dark:text-blue-500"
+                      : tab.enabled
+                        ? "hover:text-gray-600 hover:bg-gray-50 bg-gray-100"
+                        : "text-gray-400 cursor-not-allowed dark:text-gray-500"
+                  }`}
+                  role="tab"
+                  aria-selected={activeTab === tab.name}
+                  aria-controls={`${tab.name.toLowerCase().replace(/\s/g, "-")}-panel`}
+                  disabled={!tab.enabled}
+                >
+                  {tab.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div id={`${activeTab.toLowerCase().replace(/\s/g, "-")}-panel`} role="tabpanel" className="mt-4">
+            {renderTabContent()}
+          </div>
+          {isTenant && (
+            <div className="px-4">
+              <Link
+                href={`/marketplace/hardware/${params.id}/deploy`}
+                className="mt-4 mb-2 bg-black text-white px-3 py-2 text-md rounded w-full text-center block"
               >
-                {tab.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-        <div id={`${activeTab.toLowerCase().replace(/\s/g, "-")}-panel`} role="tabpanel" className="mt-4">
-          {renderTabContent()}
+                Deploy To Hardware
+              </Link>
+            </div>
+          )}
         </div>
-        {isTenant && (
-          <div className="px-4">
-            <Link
-              href={`/marketplace/hardware/${params.id}/deploy`}
-              className="mt-4 mb-2 bg-black text-white px-3 py-2 text-md rounded w-full text-center block"
-            >
-              Deploy To Hardware
-            </Link>
-          </div>
-        )}
       </div>
       <Modal
         isOpen={isApproveModalOpen}
@@ -375,6 +377,6 @@ export const HardwareDetailsMain = ({ refetch }: any) => {
           )}
         </div>
       </Modal>
-    </div>
+    </>
   );
 };

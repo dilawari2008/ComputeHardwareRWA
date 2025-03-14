@@ -103,7 +103,7 @@ export default function HardwareDetails() {
   return (
     <div className="min-h-screen flex flex-col bg-white mb-6">
       <main className="flex-1 w-full p-4">
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-6 ">
           <HardwareDetailsMain refetch={refetch} />
           <HardwareActionPanel refetch={refetch} />
         </div>

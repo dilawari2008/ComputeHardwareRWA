@@ -163,7 +163,7 @@ const ListHardware = () => {
 
   return (
     <div className="container mx-auto py-12">
-      <div className="flex items-center justify-center w-full flex-col">
+      <div className="flex items-center justify-center w-full flex-col opacity-0 transform translate-y-10 transition-all duration-1000 ease-out animate-fadeInUp">
         <div style={{ width: "50vw" }}>
           <div className="text-left mb-6">
             <h1 className="text-3xl font-bold">List Your Hardware</h1>

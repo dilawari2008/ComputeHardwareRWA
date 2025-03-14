@@ -68,7 +68,7 @@ const PraposeRentPrieModal = ({ hardware, onClose }: any) => {
       <KeyValueGrid
         items={[
           { key: "Current Price", value: `${hardware?.hardware?.rentalPrice}` },
-          { key: "Smart Price Suggestion", value: `${rentalPrice} ETH / day` },
+          { key: "Smart Price Suggestion", value: `${rentalPrice} ETH / day`, important: true },
         ]}
       />
       <div className="mt-2 ml-4 text-md text-gray-400">Your proposal requires a 60% majority vote to pass.</div>

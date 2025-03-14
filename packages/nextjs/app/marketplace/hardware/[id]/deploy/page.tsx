@@ -136,103 +136,107 @@ export default function Deploy() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-2 m-4">
-      {/* Left Panel - Deploy Code */}
-      <div className="w-2/3 p-4">
-        <div className="bg-white rounded-lg shadow-md p-9">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">Deploy Code</h2>
-              <div className="text-gray-600">Write or paste your code to deploy to AMD MI250X</div>
+    <div>
+      <div className="flex flex-col md:flex-row gap-2 m-4 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out animate-fadeInUp">
+        {/* Left Panel - Deploy Code */}
+        <div className="w-2/3 p-4">
+          <div className="bg-white rounded-lg shadow-md p-9">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">Deploy Code</h2>
+                <div className="text-gray-600">Write or paste your code to deploy to AMD MI250X</div>
+              </div>
+              <div>
+                {/* <div className="text-green-500 bg-green-100 inline-block px-2 pt-1 rounded">Rented</div> */}
+              </div>
             </div>
-            <div>{/* <div className="text-green-500 bg-green-100 inline-block px-2 pt-1 rounded">Rented</div> */}</div>
-          </div>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <ul
-                className="flex ml-3 rounded-lg flex-wrap text-sm font-medium text-center dark:text-gray-400 mt-4 w-full"
-                role="tablist"
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <ul
+                  className="flex ml-3 rounded-lg flex-wrap text-sm font-medium text-center dark:text-gray-400 mt-4 w-full"
+                  role="tablist"
+                >
+                  {[{ name: "Javascript", enabled: true }].map((tab: any) => (
+                    <li key={tab.name} className="bg-gray-100">
+                      <button
+                        onClick={() => tab.enabled && setActiveTab(tab.name)}
+                        className={`inline-block p-2 rounded-lg text-lg transition-colors ${
+                          activeTab === tab.name && tab.enabled
+                            ? "text-blue-600 bg-gray-50 active dark:bg-gray-800 dark:text-blue-500"
+                            : tab.enabled
+                              ? "hover:text-gray-600 hover:bg-gray-50 bg-gray-100"
+                              : "text-gray-400 cursor-not-allowed dark:text-gray-500"
+                        }`}
+                        role="tab"
+                        aria-selected={activeTab === tab.name}
+                        aria-controls={`${tab.name.toLowerCase().replace(/\s/g, "-")}-panel`}
+                        disabled={!tab.enabled}
+                      >
+                        {tab.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <button className="mt-4 bg-white px-4 border py-2 text-lg rounded w-full"> Load Template</button>
+              </div>
+            </div>
+            <textarea
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              placeholder="Enter your JavaScript code here..."
+              className="w-full h-[600px] p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={() => setHoursModalOpen(true)}
+                className="mt-4 bg-black text-lg text-white px-4 py-3 rounded"
               >
-                {[{ name: "Javascript", enabled: true }].map((tab: any) => (
-                  <li key={tab.name} className="bg-gray-100">
-                    <button
-                      onClick={() => tab.enabled && setActiveTab(tab.name)}
-                      className={`inline-block p-2 rounded-lg text-lg transition-colors ${
-                        activeTab === tab.name && tab.enabled
-                          ? "text-blue-600 bg-gray-50 active dark:bg-gray-800 dark:text-blue-500"
-                          : tab.enabled
-                            ? "hover:text-gray-600 hover:bg-gray-50 bg-gray-100"
-                            : "text-gray-400 cursor-not-allowed dark:text-gray-500"
-                      }`}
-                      role="tab"
-                      aria-selected={activeTab === tab.name}
-                      aria-controls={`${tab.name.toLowerCase().replace(/\s/g, "-")}-panel`}
-                      disabled={!tab.enabled}
-                    >
-                      {tab.name}
-                    </button>
-                  </li>
-                ))}
+                Deploy to Hardware
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel - Hardware Specs */}
+        <div className="w-1/3 p-4">
+          <div className="bg-white rounded-lg shadow-md p-9">
+            <h3 className="text-3xl mt-3 font-bold">Hardware Specifications</h3>
+            <p className="mb-4 text-gray-400">{hardware?.hardware?.name})</p>
+            <div className="grid grid-cols-2 gap-y-2">
+              <div className="text-gray-400 font-medium text-left text-lg">Hardware</div>
+              <div className="text-left text-xl">
+                {hardware?.hardware?.name} {hardware?.hardware?.memory}
+              </div>
+              <div className="text-gray-400 font-medium text-left text-lg">Performance</div>
+              <div className="text-left text-xl">
+                {hardware?.hardware?.performance + " " + (hardware?.hardware?.memory || "")}
+              </div>
+              <div className="text-gray-400 font-medium text-left text-lg">Location</div>
+              <div className="text-left text-xl">{hardware?.hardware?.location}</div>
+            </div>
+            <div className="m-2 p-5 bg-gray-50 mt-6">
+              <div className="font-medium text-left text-xl">Deployment Info</div>
+              <div className="text-left text-gray-600 text-md mt-1">Your code will run directly on this hardware.</div>
+              <div className="flex items-center justify-between mt-2">
+                <div className="font-medium text-left text-lg">Rental Period</div>
+                <div className="text-left text-xl">Active</div>
+              </div>
+            </div>
+            <div className="m-2 p-5 bg-gray-50 mt-4">
+              <h4 className="text-lg font-semibold">Usage Tips</h4>
+              <ul className="list-disc list-inside text-gray-600">
+                <li>Code execution is secure and isolated</li>
+                <li>Results are stored for 30 days</li>
+                <li>Max execution time: 48 hours</li>
+                <li>Data persistence between runs</li>
               </ul>
             </div>
-            <div>
-              <button className="mt-4 bg-white px-4 border py-2 text-lg rounded w-full"> Load Template</button>
-            </div>
-          </div>
-          <textarea
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            placeholder="Enter your JavaScript code here..."
-            className="w-full h-[600px] p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="flex justify-end">
-            <button
-              onClick={() => setHoursModalOpen(true)}
-              className="mt-4 bg-black text-lg text-white px-4 py-3 rounded"
-            >
-              Deploy to Hardware
-            </button>
           </div>
         </div>
+        <Toaster position="bottom-right" />
       </div>
-
-      {/* Right Panel - Hardware Specs */}
-      <div className="w-1/3 p-4">
-        <div className="bg-white rounded-lg shadow-md p-9">
-          <h3 className="text-3xl mt-3 font-bold">Hardware Specifications</h3>
-          <p className="mb-4 text-gray-400">{hardware?.hardware?.name})</p>
-          <div className="grid grid-cols-2 gap-y-2">
-            <div className="text-gray-400 font-medium text-left text-lg">Hardware</div>
-            <div className="text-left text-xl">
-              {hardware?.hardware?.name} {hardware?.hardware?.memory}
-            </div>
-            <div className="text-gray-400 font-medium text-left text-lg">Performance</div>
-            <div className="text-left text-xl">
-              {hardware?.hardware?.performance + " " + (hardware?.hardware?.memory || "")}
-            </div>
-            <div className="text-gray-400 font-medium text-left text-lg">Location</div>
-            <div className="text-left text-xl">{hardware?.hardware?.location}</div>
-          </div>
-          <div className="m-2 p-5 bg-gray-50 mt-6">
-            <div className="font-medium text-left text-xl">Deployment Info</div>
-            <div className="text-left text-gray-600 text-md mt-1">Your code will run directly on this hardware.</div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="font-medium text-left text-lg">Rental Period</div>
-              <div className="text-left text-xl">Active</div>
-            </div>
-          </div>
-          <div className="m-2 p-5 bg-gray-50 mt-4">
-            <h4 className="text-lg font-semibold">Usage Tips</h4>
-            <ul className="list-disc list-inside text-gray-600">
-              <li>Code execution is secure and isolated</li>
-              <li>Results are stored for 30 days</li>
-              <li>Max execution time: 48 hours</li>
-              <li>Data persistence between runs</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <Toaster position="bottom-right" />
       <Modal
         isOpen={hoursModalOpen}
         onClose={() => setHoursModalOpen(false)}
