@@ -77,7 +77,7 @@ const Marketplace = () => {
             />
             <Link
               href="/create-listing"
-              className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-lg font-medium transition-colors"
+              className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800 text-sm  font-medium transition-colors"
             >
               List Your Hardware
             </Link>

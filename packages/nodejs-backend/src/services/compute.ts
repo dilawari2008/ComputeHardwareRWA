@@ -1,9 +1,5 @@
-import { PinataSDK } from "pinata";
-import { HttpStatusCodes } from "@/common/constants";
-import LOGGER from "@/common/logger";
 import createHttpError from "http-errors";
 import axios from "axios";
-import { Readable } from "stream";
 import FormData from "form-data";
 import Config from "@/config";
 import fs from "fs";
@@ -13,8 +9,11 @@ import { MARKETPLACE_ABI } from "@/common/constants/abi/marketplace.abi";
 import { RWADAO_ABI } from "@/common/constants/abi/rwa-dao.abi";
 import { RWA_TOKEN_ABI } from "@/common/constants/abi/token";
 import { RWA_NFT_ABI } from "@/common/constants/abi/nft.abi";
-import { IDeployment } from "@/interfaces/model";
 import { Deployment } from "@/db/models/deployment";
+import DeploymentService from "@/services/deployment";
+import { CPUMetric } from "@/db/models/cpu-metric";
+import { IDeployment } from "@/interfaces/model";
+import { PRICE_ORACLE_ABI } from "@/common/constants/abi/price-oracle.abi";
 
 const provider = new ethers.providers.JsonRpcProvider(
   Config.rpcUrl[(process.env.CHAIN as EChain) || EChain.hardhat]
@@ -67,6 +66,7 @@ interface ICreateListingReq {
   memory: string;
   location: string;
   userAddress: string;
+  instanceId: string;
 }
 
 const createListing = async (listing: ICreateListingReq) => {
@@ -86,10 +86,12 @@ const createListing = async (listing: ICreateListingReq) => {
     totalTokens,
     tokenPrice,
     rentalPrice,
+    instanceId,
   } = listing;
 
   const hardwareMetadata = {
     name: hardwareName,
+    instanceId,
     image: imageUrl,
     cpu: cpu || "",
     memory: memory || "",
@@ -706,7 +708,7 @@ const getDaoDetails = async (daoAddress: string) => {
         created: hardwareMetadata?.created || "5/15/2023",
         status: isAvailable ? "Available" : "Rented",
         rentalPrice: `${ethers.utils.formatEther(rentalPrice)} ETH / day`,
-        image: hardwareMetadata?.image ?? ""
+        image: hardwareMetadata?.image ?? "",
       },
       token: {
         name: tokenName || "NVIDIA A100 Token",
@@ -1568,11 +1570,38 @@ const completeUnlist = async (req: IUnlockNFTReq) => {
 };
 
 const saveDeployment = async (deployment: IDeployment) => {
+  // use daoAddress to get the NFT metadata and extract instance id from there
+  const daoContract = new ethers.Contract(deployment.daoAddress, RWADAO_ABI, provider);
+  // Get the NFT contract address from the DAO
+  const nftContractAddress = await daoContract.nftContract();
+  console.log(`NFT contract address: ${nftContractAddress}`);
+  
+  // Connect to the NFT contract
+  const nftContract = new ethers.Contract(nftContractAddress, RWA_NFT_ABI, provider);
+  
+  // Get the metadata URL from the NFT contract
+  const tokenId = await daoContract.tokenId();
+  const metadataUrl = await nftContract.tokenURI(tokenId);
+  console.log(`Metadata URL: ${metadataUrl}`);
+  
+  // Fetch the metadata content
+  const response = await axios.get(metadataUrl);
+  const metadata = response.data;
+  
+  // Extract the instance ID from metadata
+  const instanceId = metadata.instanceId;
+  console.log(`Instance ID: ${instanceId}`);
+  
+  // Update the deployment with the instance ID
+  deployment.instanceId = instanceId;
+  
   const deploymentRes = await Deployment.findOneAndUpdate(
-    { userAddress: deployment.userAddress, daoAddress: deployment.daoAddress },
+    { userAddress: deployment.userAddress, daoAddress: deployment.daoAddress, instanceId: deployment.instanceId },
     deployment,
     { new: true, upsert: true }
   );
+
+  DeploymentService.deployScript(instanceId, deploymentRes.script);
 
   return deploymentRes;
 };
@@ -1598,12 +1627,33 @@ const getRentalPrice = async (daoAddress: string) => {
   );
 
   try {
+    // First get the base rental price from the DAO contract
     const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
-    const rentalPriceWei = await daoContract.rentalPrice();
+    const baseRentalPriceWei = await daoContract.rentalPrice();
+
+    // Get the PriceOracle address associated with the DAO
+    // Assuming the DAO has a method to get its associated PriceOracle
+    const priceOracleAddress = await daoContract.priceOracle();
+
+    // Connect to PriceOracle contract
+    const priceOracleContract = new ethers.Contract(
+      priceOracleAddress,
+      PRICE_ORACLE_ABI,
+      provider
+    );
+
+    // Get the proposed rental price based on CPU utilization
+    const proposedRentalPriceWei =
+      await priceOracleContract.getProposedRentalPrice(baseRentalPriceWei);
 
     const res = {
-      rentalPriceWei: rentalPriceWei.toString(),
-      rentalPriceEth: ethers.utils.formatEther(rentalPriceWei),
+      baseRentalPriceWei: baseRentalPriceWei.toString(),
+      baseRentalPriceEth: ethers.utils.formatEther(baseRentalPriceWei),
+      rentalPriceWei: proposedRentalPriceWei.toString(),
+      rentalPriceEth: ethers.utils.formatEther(proposedRentalPriceWei),
+      cpuUtilization: (
+        await priceOracleContract.getAverageUtilization()
+      ).toString(),
     };
 
     return res;

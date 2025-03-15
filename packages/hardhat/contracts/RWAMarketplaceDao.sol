@@ -21,9 +21,6 @@ contract RWAMarketplaceDao is Ownable {
     // More gas efficient than searching through array
     mapping(address => uint256) private daoToIndex;
 
-    event ListingCreated(address indexed daoAddress, address indexed creator);
-    event ListingRemoved(address indexed daoAddress);
-
     constructor() Ownable(msg.sender) {}
 
     function createListing(
@@ -61,8 +58,6 @@ contract RWAMarketplaceDao is Ownable {
         // Store the index + 1 (0 means not found)
         daoToIndex[daoAddress] = listings.length;
 
-        emit ListingCreated(daoAddress, msg.sender);
-
         return daoAddress;
     }
 
@@ -85,8 +80,6 @@ contract RWAMarketplaceDao is Ownable {
         // Remove the last element and the mapping
         listings.pop();
         delete daoToIndex[daoAddress];
-
-        emit ListingRemoved(daoAddress);
     }
 
     function getListings() external view returns (address[] memory) {

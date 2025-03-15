@@ -156,7 +156,7 @@ export default function Deploy() {
                   className="flex ml-3 rounded-lg flex-wrap text-sm font-medium text-center dark:text-gray-400 mt-4 w-full"
                   role="tablist"
                 >
-                  {[{ name: "Javascript", enabled: true }].map((tab: any) => (
+                  {[{ name: "Bash", enabled: true }].map((tab: any) => (
                     <li key={tab.name} className="bg-gray-100">
                       <button
                         onClick={() => tab.enabled && setActiveTab(tab.name)}
@@ -185,7 +185,13 @@ export default function Deploy() {
             <textarea
               value={code}
               onChange={e => setCode(e.target.value)}
-              placeholder="Enter your JavaScript code here..."
+              placeholder={`#!/bin/bash
+              
+# Enter your bash script here
+# Example:
+# apt-get update
+# apt-get install -y python3-pip
+# pip3 install tensorflow`}
               className="w-full h-[600px] p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <div className="flex justify-end">
