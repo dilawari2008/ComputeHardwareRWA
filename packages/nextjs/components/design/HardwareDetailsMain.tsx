@@ -56,6 +56,7 @@ export const HardwareDetailsMain = ({ refetch }: any) => {
           <KeyValueGrid
             items={[
               { key: "Hardware", value: hardware?.hardware?.name },
+              { key: "Instance ID", value: hardware?.hardware?.instanceId ?? "-" },
               {
                 key: "Specifications",
                 value: hardware?.hardware?.performance + " " + (hardware?.hardware?.memory || ""),
