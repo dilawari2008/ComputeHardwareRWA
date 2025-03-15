@@ -32,38 +32,6 @@ export const MARKETPLACE_ABI = [
       {
         indexed: true,
         internalType: "address",
-        name: "daoAddress",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "creator",
-        type: "address",
-      },
-    ],
-    name: "ListingCreated",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "daoAddress",
-        type: "address",
-      },
-    ],
-    name: "ListingRemoved",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
         name: "previousOwner",
         type: "address",
       },
