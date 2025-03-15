@@ -3,11 +3,13 @@ pragma solidity ^0.8.20;
 
 import "./RWANft.sol";
 import "./RWAToken.sol";
+import "./PriceOracle.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RWADao is Ownable {
     RWANft public immutable NFT_CONTRACT;
     RWAToken public immutable TOKEN_CONTRACT;
+    PriceOracle public immutable PRICE_ORACLE;
     uint256 public tokenPrice;
     uint256 public rentalPrice;
     address public currentTenant;
@@ -37,17 +39,6 @@ contract RWADao is Ownable {
     ApprovedSale[] public approvedSales;
     mapping(address => uint256) public sellerToAvailableTokens;
 
-    event DaoCreated(address indexed nftAddress, address indexed tokenAddress);
-    event TokensApprovedForSale(address indexed seller, uint256 amount);
-    event TokensPurchased(address indexed seller, address indexed buyer, uint256 amount, uint256 price);
-    event NFTUnlocked(address indexed unlocker);
-    event TenantChanged(address indexed oldTenant, address indexed newTenant);
-    event RentPaid(address indexed tenant, uint256 amount);
-    event RentDistributed(address indexed holder, uint256 amount);
-    event RentProposalCreated(address indexed proposer, uint256 newPrice);
-    event VoteCast(address indexed voter, bool inFavor, uint256 weight);
-    event ProposalCompleted(bool approved, uint256 newPrice);
-
     constructor(
         string memory nftName,
         string memory nftSymbol,
@@ -72,6 +63,7 @@ contract RWADao is Ownable {
         NFT_CONTRACT.mintNft(metadataUrl);
         TOKEN_CONTRACT = new RWAToken(tokenName, tokenSymbol, 0);
         TOKEN_CONTRACT.mintToAddress(initialOwnerAddress, initialSupply);
+        PRICE_ORACLE = new PriceOracle();
 
         tokenPrice = initialTokenPrice;
         rentalPrice = initialRentalPrice;
@@ -79,8 +71,6 @@ contract RWADao is Ownable {
         FEE_PERCENTAGE = initialFeePercentage;
         RENTAL_FEE_PERCENTAGE = initialRentalFeePercentage;
         VOTE_THRESHOLD = initialVoteThreshold;
-
-        emit DaoCreated(address(NFT_CONTRACT), address(TOKEN_CONTRACT));
     }
 
     function unlockNFT() external {
@@ -98,8 +88,6 @@ contract RWADao is Ownable {
 
         // Burn all tokens
         TOKEN_CONTRACT.burn(totalSupply);
-
-        emit NFTUnlocked(msg.sender);
     }
 
     function becomeTenant() external payable {
@@ -110,14 +98,10 @@ contract RWADao is Ownable {
 
         currentTenant = msg.sender;
         _distributeRent(msg.value - daoFee); // Inline calculation to save gas
-
-        emit TenantChanged(address(0), msg.sender);
-        emit RentPaid(msg.sender, msg.value);
     }
 
     function quitTenancy() external {
         require(msg.sender == currentTenant, "Not the current tenant");
-        emit TenantChanged(msg.sender, address(0));
         currentTenant = address(0); // Move after the event to save gas on cold storage read
     }
 
@@ -127,8 +111,6 @@ contract RWADao is Ownable {
 
         uint256 daoFee = (msg.value * RENTAL_FEE_PERCENTAGE) / PERCENTAGE_DECIMALS;
         _distributeRent(msg.value - daoFee); // Inline calculation to save gas
-
-        emit RentPaid(msg.sender, msg.value);
     }
 
     function proposeNewRent(uint256 newRentalPrice) external {
@@ -143,8 +125,6 @@ contract RWADao is Ownable {
         proposal.votesFor = 0;
         proposal.votesAgainst = 0;
         proposal.timestamp = block.timestamp;
-
-        emit RentProposalCreated(msg.sender, newRentalPrice);
     }
 
     function vote(bool inFavor) external {
@@ -165,7 +145,6 @@ contract RWADao is Ownable {
         }
 
         proposal.hasVoted[msg.sender] = true;
-        emit VoteCast(msg.sender, inFavor, voterWeight);
 
         _checkAndFinalizeVote();
     }
@@ -176,17 +155,13 @@ contract RWADao is Ownable {
 
         if (proposal.votesFor >= VOTE_THRESHOLD) {
             rentalPrice = proposal.proposedPrice;
-            _resetProposal(true);
+            _resetProposal();
         } else if (proposal.votesAgainst > (PERCENTAGE_DECIMALS - VOTE_THRESHOLD)) {
-            _resetProposal(false);
+            _resetProposal();
         }
     }
 
-    function _resetProposal(bool approved) private {
-        // Retrieve values before deleting to save gas
-        uint256 proposedPrice = currentProposal.proposedPrice;
-        emit ProposalCompleted(approved, approved ? proposedPrice : rentalPrice);
-
+    function _resetProposal() private {
         // Cache holders array to avoid repeated calls
         address[] memory holders = TOKEN_CONTRACT.getHolders();
         // Use direct storage reference to save gas on repeated access
@@ -223,7 +198,6 @@ contract RWADao is Ownable {
             uint256 finalAmount = holderShare - ((holderShare * FEE_PERCENTAGE) / PERCENTAGE_DECIMALS);
 
             payable(holder).transfer(finalAmount);
-            emit RentDistributed(holder, finalAmount);
         }
     }
 
@@ -253,7 +227,6 @@ contract RWADao is Ownable {
         approvedSales.push(ApprovedSale({ seller: msg.sender, amount: amount, timestamp: block.timestamp }));
 
         sellerToAvailableTokens[msg.sender] = totalAfterRequest; // Use cached value
-        emit TokensApprovedForSale(msg.sender, amount);
     }
 
     function buyTokens(uint256 amount) external payable {
@@ -282,8 +255,6 @@ contract RWADao is Ownable {
                 sale.amount -= buyAmount;
                 sellerToAvailableTokens[seller] -= buyAmount;
                 remainingToBuy -= buyAmount;
-
-                emit TokensPurchased(seller, msg.sender, buyAmount, buyAmount * tokenPrice);
             }
             i++;
         }

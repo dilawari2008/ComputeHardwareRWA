@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     RWAMarketplaceDao: {
-      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      address: "0x499AA73A1D27e54B33E7DB05ffd22854EC70257E",
       abi: [
         {
           inputs: [],
@@ -35,38 +35,6 @@ const deployedContracts = {
           ],
           name: "OwnableUnauthorizedAccount",
           type: "error",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "daoAddress",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "creator",
-              type: "address",
-            },
-          ],
-          name: "ListingCreated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "daoAddress",
-              type: "address",
-            },
-          ],
-          name: "ListingRemoved",
-          type: "event",
         },
         {
           anonymous: false,

@@ -35,7 +35,7 @@ const config: HardhatUserConfig = {
           optimizer: {
             enabled: true,
             // https://docs.soliditylang.org/en/latest/using-the-compiler.html#optimizer-options
-            runs: 110,
+            runs: 50,
           },
         },
       },
@@ -53,8 +53,10 @@ const config: HardhatUserConfig = {
     // If the network you are looking for is not here you can add new network settings
     hardhat: {
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
-        enabled: process.env.MAINNET_FORKING_ENABLED === "true",
+        // url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
+        // enabled: process.env.MAINNET_FORKING_ENABLED === "true",
+        url: `https://sepolia-rpc.scroll.io`,
+        enabled: true,
       },
     },
     mainnet: {

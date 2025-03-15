@@ -23,4 +23,5 @@ export interface IDeployment extends IMongooseDocument {
   userAddress: string;
   daoAddress: string;
   script: string;
+  instanceId?: string;
 }
