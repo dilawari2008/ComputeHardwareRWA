@@ -78,6 +78,7 @@ const ListHardware = () => {
         memory: data.memory,
         location: data.location,
         userAddress: address,
+        instanceId: data.instanceId,
       };
 
       // const txObject = {
@@ -198,6 +199,27 @@ const ListHardware = () => {
               {errors.hardwareName && <span className="text-red-500 text-xs">{errors.hardwareName.message}</span>}
             </div>
 
+            {/* Instance ID */}
+            <div className="mb-4">
+              <label htmlFor="hardwareName" className="block text-sm font-medium text-gray-700">
+                Instance ID
+              </label>
+              <Controller
+                name="instanceId"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="text"
+                    id="instanceId"
+                    className={`class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" ${errors.hardwareName ? "border-red-500" : ""}`}
+                    placeholder="i-rtyyx5456"
+                  />
+                )}
+              />
+              {errors.hardwareName && <span className="text-red-500 text-xs">{errors.hardwareName.message}</span>}
+            </div>
+
             {/* Tokens and Price */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -299,10 +321,7 @@ const ListHardware = () => {
                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4 0h-4v4m-12 4h12" />
                       </svg>
                       <div className="text-sm text-gray-600 flex items-center justify-center">
-                        <label
-                          htmlFor="hardwareImage"
-                          className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
-                        >
+                        <div className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                           <span>Click to upload an image of your hardware</span>
                           <input
                             id="hardwareImage"
@@ -311,7 +330,7 @@ const ListHardware = () => {
                             className="sr-only"
                             accept="image/png, image/jpeg, image/gif"
                           />
-                        </label>
+                        </div>
                       </div>
                       <p className="text-xs text-gray-500">JPG, PNG, or GIF up to 5MB</p>
                     </>

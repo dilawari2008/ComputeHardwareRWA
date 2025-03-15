@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import Modal from "~~/components/design/Modal";
@@ -18,6 +17,7 @@ export default function Deploy() {
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<string>(``);
   const [hoursModalOpen, setHoursModalOpen] = useState(false);
+  const [deploymentDetails, setDeploymentDetails] = useState();
   const handleDeploy = async () => {
     console.log("set deploy");
     setHoursModalOpen(false);
@@ -39,40 +39,43 @@ export default function Deploy() {
         script: code,
       });
 
-      console.log("Deployment saved:", response.data);
+      if (response) {
+        console.log("Deployment saved:", response.data);
 
-      const heading = "Deployment Successful";
-      const description = `Your code has been deployed to the ${hardware?.hardware?.name}.`;
-      // Use toast.custom to render a structured toast
-      toast.custom(
-        t => (
-          <div
-            className={`bg-white border border-gray-200 rounded-lg shadow-md p-4 max-w-sm transition-all ${
-              t.visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-lg font-semibold text-gray-800">{heading}</h4>
-              <button onClick={() => toast.dismiss(t.id)} className="text-gray-500 hover:text-gray-700">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        const heading = "Deployment Successful";
+        const description = `Your code has been deployed to the ${hardware?.hardware?.name}.`;
+        // Use toast.custom to render a structured toast
+        toast.custom(
+          t => (
+            <div
+              className={`bg-white border border-gray-200 rounded-lg shadow-md p-4 max-w-sm transition-all ${
+                t.visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-lg font-semibold text-gray-800">{heading}</h4>
+                <button onClick={() => toast.dismiss(t.id)} className="text-gray-500 hover:text-gray-700">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="text-gray-600 text-sm mb-2">{description}</div>
             </div>
-            <div className="text-gray-600 text-sm mb-2">{description}</div>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "bottom-left", // Updated to bottom-left as per your earlier request
-        },
-      );
+          ),
+          {
+            duration: 1000,
+            position: "bottom-left", // Updated to bottom-left as per your earlier request
+          },
+        );
+        fetchDeployment();
+      }
     } catch (error) {
       console.error("Error saving deployment:", error);
       toast.error("Failed to deploy code. Please try again.");
@@ -98,6 +101,31 @@ export default function Deploy() {
     fetchHardware();
   }, [hardwareId]);
 
+  function timeAgo(date: any) {
+    const now = new Date();
+    const timeDifference = now - new Date(date); // difference in milliseconds
+
+    const seconds = Math.floor(timeDifference / 1000); // convert to seconds
+    const minutes = Math.floor(seconds / 60); // convert to minutes
+    const hours = Math.floor(minutes / 60); // convert to hours
+    const days = Math.floor(hours / 24); // convert to days
+
+    console.log(minutes, "minutes");
+
+    if (minutes < 1) {
+      return "Just now"; // Less than a minute
+    } else if (minutes < 60) {
+      return `${minutes} minutes ago`; // Less than an hour
+    } else if (hours < 24) {
+      return `${hours} hours ago`; // Less than a day
+    } else if (days < 30) {
+      return `${days} days ago`; // Less than a month
+    } else {
+      const months = Math.floor(days / 30);
+      return `${months} months ago`; // More than a month
+    }
+  }
+
   useEffect(() => {
     if (address) {
       fetchDeployment();
@@ -108,19 +136,21 @@ export default function Deploy() {
     console.log(address, "address");
     console.log(hardwareId, "hardwareId");
     try {
-      const deploymentsResponse = await Api.post("/get-deployments", {
+      const deploymentsResponse = (await Api.post("/get-deployments", {
         userAddress: address,
         daoAddress: hardwareId,
-      });
+      })) as any;
+      setDeploymentDetails(deploymentsResponse?.data[0]);
       if (deploymentsResponse.data && deploymentsResponse.data.length > 0) {
         setCode(deploymentsResponse.data[0].script);
       }
-      console.log(deploymentsResponse.data, "response");
+      console.log(deploymentsResponse?.data, "response");
     } catch (err) {
       toast.error("Failed to fetch deployments. Please try again later.");
       console.error("Error fetching deployments:", err);
     }
   };
+
   const [activeTab, setActiveTab] = useState("Javascript");
 
   if (isLoading) {
@@ -215,6 +245,14 @@ export default function Deploy() {
               </div>
               <div className="text-gray-400 font-medium text-left text-lg">Location</div>
               <div className="text-left text-xl">{hardware?.hardware?.location}</div>
+              {deploymentDetails?.createdAt && (
+                <>
+                  <div className="text-gray-400 font-medium text-left text-lg">Running</div>
+                  <div className="text-left text-xl">
+                    {deploymentDetails?.createdAt ? timeAgo(deploymentDetails.createdAt) : ""}
+                  </div>
+                </>
+              )}
             </div>
             <div className="m-2 p-5 bg-gray-50 mt-6">
               <div className="font-medium text-left text-xl">Deployment Info</div>
@@ -235,7 +273,6 @@ export default function Deploy() {
             </div>
           </div>
         </div>
-        <Toaster position="bottom-right" />
       </div>
       <Modal
         isOpen={hoursModalOpen}

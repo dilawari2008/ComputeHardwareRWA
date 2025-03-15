@@ -131,7 +131,7 @@ export const HardwareActionPanel = ({ refetch }: any) => {
               {(isDaoMember || isMarketplaceOwner) && (
                 <button
                   onClick={() => setIsApproveTokenModal(true)}
-                  className="mt-4 bg-white px-3 text-black border py-2 text-md rounded w-full"
+                  className="mt-4 bg-white px-3 hover:bg-gray-50 text-black border py-2 text-md rounded w-full"
                 >
                   {" "}
                   ✓ Approve For Sale

@@ -53,13 +53,11 @@ export default function HardwareDetails() {
         setIsTenant(tenantResponse.data.isTenant);
         console.log("Is Tenant:", tenantResponse.data.isTenant);
 
-        if (!tenantResponse.data.isTenant) {
-          const marketplaceOwnerResponse = await Api.post<any>("/is-marketplace-owner", {
-            userAddress: address,
-          });
-          setIsMarketplaceOwner(marketplaceOwnerResponse.data.isOwner);
-          console.log("Is Marketplace Owner:", marketplaceOwnerResponse.data.isOwner);
-        }
+        const marketplaceOwnerResponse = await Api.post<any>("/is-marketplace-owner", {
+          userAddress: address,
+        });
+        setIsMarketplaceOwner(marketplaceOwnerResponse.data.isOwner);
+        console.log("Is Marketplace Owner:", marketplaceOwnerResponse.data.isOwner);
       } else {
         setIsDaoMember(false);
         setIsTenant(false);

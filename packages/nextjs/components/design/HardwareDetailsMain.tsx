@@ -167,12 +167,12 @@ export const HardwareDetailsMain = ({ refetch }: any) => {
             ) : (
               <button
                 onClick={() => setIsPraposeRentModal(true)}
-                className="mt-4 mb-2 bg-white text-black border border-gray-300 px-1 py-2 text-md rounded w-full"
+                className="mt-4 mb-2 hover:bg-gray-50 bg-white text-black border border-gray-300 px-1 py-2 text-md rounded w-full"
               >
                 Propose Rent Price Change
               </button>
             )}
-            {isMarketplaceOwner && (
+            {isMarketplaceOwner && hardware?.hardware?.status === "Available" && (
               <button
                 onClick={() => setIsDelistTokenModal(true)}
                 className="mt-4 bg-red-600 px-3 text-white border py-2 text-md rounded w-full"
@@ -200,7 +200,6 @@ export const HardwareDetailsMain = ({ refetch }: any) => {
         userAddress: address,
         daoAddress: hardware?.dao.address,
       });
-
       // Check if the unlist request was successful
       if (unlistResponse.data.needsApproval) {
         // Call complete-unlist API after successful unlisting
@@ -209,11 +208,23 @@ export const HardwareDetailsMain = ({ refetch }: any) => {
           daoAddress: hardware.dao.address, // Replace with actual DAO address
         });
 
-        if (completeUnlistResponse) {
-          toast.success("Hardware delisted successfully!");
-          router.push("/marketplace");
-        } else {
-          toast.error("Something went wrong!");
+        const signTxn1 = await signAndSendTransaction(
+          window.ethereum,
+          completeUnlistResponse?.data?.transactions[0]?.tx,
+        );
+
+        if (signTxn1) {
+          const signTxn2 = await signAndSendTransaction(
+            window.ethereum,
+            completeUnlistResponse?.data?.transactions[1]?.tx,
+          );
+
+          if (signTxn2) {
+            toast.success("Hardware delisted successfully!");
+            router.push("/marketplace");
+          } else {
+            toast.error("Something went wrong!");
+          }
         }
       }
     } catch (err) {
