@@ -7,7 +7,7 @@ import "~~/styles/globals.css";
 import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
 
 export const metadata = getMetadata({
-  title: "RWA Hardware",
+  title: "XCompute",
   description: "Fractional Ownershipof Computing Hardware",
 });
 

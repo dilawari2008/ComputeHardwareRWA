@@ -20,7 +20,7 @@ const Navbar = () => {
       <div className="flex items-center gap-8">
         {/* Logo */}
         <Link href="/" className="text-xl font-bold text-gray-800 mr-8">
-          RWA Hardware
+          XCompute
         </Link>
 
         {/* Navigation Links - Hidden on Mobile, Shown on Medium+ Screens */}
