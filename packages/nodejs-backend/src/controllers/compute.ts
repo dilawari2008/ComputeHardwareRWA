@@ -290,6 +290,19 @@ const getRentalPrice = async (req: Request, res: Response) => {
   }
 };
 
+const getAverageCpuUtilization = async (req: Request, res: Response) => {
+  try {
+    const result = await ComputeService.getAverageCpuUtilization(req.body.daoAddress);
+
+    res.sendFormatted(result);
+  } catch (error) {
+    LOGGER.error("Error in getAverageCpuUtilization controller:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 const ComputeController = {
   uploadToPinata,
   createListing,
@@ -312,6 +325,7 @@ const ComputeController = {
   saveDeployment,
   getDeployments,
   getRentalPrice,
+  getAverageCpuUtilization,
 };
 
 export default ComputeController;

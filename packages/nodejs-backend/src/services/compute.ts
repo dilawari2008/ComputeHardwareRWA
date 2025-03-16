@@ -1572,32 +1572,44 @@ const completeUnlist = async (req: IUnlockNFTReq) => {
 
 const saveDeployment = async (deployment: IDeployment) => {
   // use daoAddress to get the NFT metadata and extract instance id from there
-  const daoContract = new ethers.Contract(deployment.daoAddress, RWADAO_ABI, provider);
+  const daoContract = new ethers.Contract(
+    deployment.daoAddress,
+    RWADAO_ABI,
+    provider
+  );
   // Get the NFT contract address from the DAO
   const nftContractAddress = await daoContract.NFT_CONTRACT();
   console.log(`NFT contract address: ${nftContractAddress}`);
-  
+
   // Connect to the NFT contract
-  const nftContract = new ethers.Contract(nftContractAddress, RWA_NFT_ABI, provider);
-  
+  const nftContract = new ethers.Contract(
+    nftContractAddress,
+    RWA_NFT_ABI,
+    provider
+  );
+
   // Get the metadata URL from the NFT contract
   // const tokenId = await daoContract.TOKEN_ID();
   const metadataUrl = await nftContract.tokenURI(0);
   console.log(`Metadata URL: ${metadataUrl}`);
-  
+
   // Fetch the metadata content
   const response = await axios.get(metadataUrl);
   const metadata = response.data;
-  
+
   // Extract the instance ID from metadata
   const instanceId = metadata.instanceId;
   console.log(`Instance ID: ${instanceId}`);
-  
+
   // Update the deployment with the instance ID
   deployment.instanceId = instanceId;
-  
+
   const deploymentRes = await Deployment.findOneAndUpdate(
-    { userAddress: deployment.userAddress, daoAddress: deployment.daoAddress, instanceId: deployment.instanceId },
+    {
+      userAddress: deployment.userAddress,
+      daoAddress: deployment.daoAddress,
+      instanceId: deployment.instanceId,
+    },
     deployment,
     { new: true, upsert: true }
   );
@@ -1666,6 +1678,12 @@ const getRentalPrice = async (daoAddress: string) => {
   }
 };
 
+const getAverageCpuUtilization = async (daoAddress: string) => {
+  const averageCpuUtilization =
+    await DeploymentService.getAverageCpuUtilization(daoAddress);
+  return averageCpuUtilization;
+};
+
 const ComputeService = {
   uploadToPinata,
   createListing,
@@ -1688,6 +1706,7 @@ const ComputeService = {
   saveDeployment,
   getDeployments,
   getRentalPrice,
+  getAverageCpuUtilization,
 };
 
 export default ComputeService;

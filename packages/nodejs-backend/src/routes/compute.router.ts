@@ -103,4 +103,9 @@ ComputeRouter.post(
   forwardRequest(ComputeController.getRentalPrice)
 );
 
+ComputeRouter.post(
+  "/average-cpu-utilization",
+  forwardRequest(ComputeController.getAverageCpuUtilization)
+);
+
 export default ComputeRouter;

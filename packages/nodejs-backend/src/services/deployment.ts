@@ -198,7 +198,7 @@ export const updatePriceOracle = async (
         `Sending metric: ${metric.percentage}% at ${metric.timestamp} to PriceOracle`
       );
       const tx = await priceOracleContract.addMetric(
-        Math.round(metric.percentage),
+        Math.ceil(metric.percentage),
         Math.floor(metric.timestamp.getTime() / 1000)
       );
       await tx.wait();
@@ -248,7 +248,7 @@ const initializeMetricsCollection = () => {
         let priceOracleAddress;
 
         try {
-          priceOracleAddress = await daoContract.priceOracle();
+          priceOracleAddress = await daoContract.PRICE_ORACLE();
         } catch (error) {
           console.error(
             `Error getting priceOracle for DAO ${daoAddress}:`,
@@ -286,11 +286,45 @@ const initializeMetricsCollection = () => {
   console.log("Cron job scheduled to run every 5 minutes");
 };
 
+const getAverageCpuUtilization = async (
+  daoAddress: string
+): Promise<number> => {
+  console.log(`Fetching average CPU utilization for DAO at ${daoAddress}`);
+
+  try {
+    // Get the PriceOracle address from the DAO contract
+    const daoContract = new ethers.Contract(daoAddress, RWADAO_ABI, provider);
+
+    const priceOracleAddress = await daoContract.PRICE_ORACLE();
+    console.log(`Found PriceOracle at ${priceOracleAddress}`);
+
+    // Get the average utilization from the PriceOracle
+    const priceOracleContract = new ethers.Contract(
+      priceOracleAddress,
+      PRICE_ORACLE_ABI,
+      provider
+    );
+
+    const averageUtilization =
+      await priceOracleContract.getAverageUtilization();
+    console.log(`Average CPU utilization: ${averageUtilization}`);
+
+    return averageUtilization.toNumber();
+  } catch (error) {
+    console.error(
+      `Error fetching average CPU utilization for DAO ${daoAddress}:`,
+      error
+    );
+    return 0;
+  }
+};
+
 // Start the cron job
-// initializeMetricsCollection();
+initializeMetricsCollection();
 
 const DeploymentService = {
   deployScript,
+  getAverageCpuUtilization,
 };
 
 export default DeploymentService;
