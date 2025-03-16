@@ -1574,15 +1574,15 @@ const saveDeployment = async (deployment: IDeployment) => {
   // use daoAddress to get the NFT metadata and extract instance id from there
   const daoContract = new ethers.Contract(deployment.daoAddress, RWADAO_ABI, provider);
   // Get the NFT contract address from the DAO
-  const nftContractAddress = await daoContract.nftContract();
+  const nftContractAddress = await daoContract.NFT_CONTRACT();
   console.log(`NFT contract address: ${nftContractAddress}`);
   
   // Connect to the NFT contract
   const nftContract = new ethers.Contract(nftContractAddress, RWA_NFT_ABI, provider);
   
   // Get the metadata URL from the NFT contract
-  const tokenId = await daoContract.tokenId();
-  const metadataUrl = await nftContract.tokenURI(tokenId);
+  // const tokenId = await daoContract.TOKEN_ID();
+  const metadataUrl = await nftContract.tokenURI(0);
   console.log(`Metadata URL: ${metadataUrl}`);
   
   // Fetch the metadata content
