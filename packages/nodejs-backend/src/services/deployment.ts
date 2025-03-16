@@ -1,4 +1,4 @@
-import AWS from "aws-sdk";
+import AWS, { Config } from "aws-sdk";
 import cron from "node-cron";
 import { ethers } from "ethers";
 import { CPUMetric } from "@/db/models/cpu-metric";
@@ -6,6 +6,8 @@ import { config } from "dotenv";
 import { PRICE_ORACLE_ABI } from "@/common/constants/abi/price-oracle.abi";
 import { RWADAO_ABI } from "@/common/constants/abi/rwa-dao.abi";
 import { Deployment } from "@/db/models/deployment";
+import EChain from "@/common/chain.enum";
+import AppConfig from "@/config";
 
 // Load environment variables from .env file
 config();
@@ -24,7 +26,9 @@ const cloudwatch = new AWS.CloudWatch({
 });
 
 // Initialize ethers provider and wallet for smart contract interaction
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL); //
+const provider = new ethers.providers.JsonRpcProvider(
+  process.env.CHAIN === EChain.hardhat ? AppConfig.rpcUrl[EChain.hardhat] : ""
+);
 const wallet = new ethers.Wallet(
   process.env.ORACLE_PRIVATE_KEY || "",
   provider
