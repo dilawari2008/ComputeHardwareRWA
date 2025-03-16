@@ -709,6 +709,7 @@ const getDaoDetails = async (daoAddress: string) => {
         status: isAvailable ? "Available" : "Rented",
         rentalPrice: `${ethers.utils.formatEther(rentalPrice)} ETH / day`,
         image: hardwareMetadata?.image ?? "",
+        instanceId: hardwareMetadata?.instanceId ?? "",
       },
       token: {
         name: tokenName || "NVIDIA A100 Token",
@@ -1633,7 +1634,7 @@ const getRentalPrice = async (daoAddress: string) => {
 
     // Get the PriceOracle address associated with the DAO
     // Assuming the DAO has a method to get its associated PriceOracle
-    const priceOracleAddress = await daoContract.priceOracle();
+    const priceOracleAddress = await daoContract.PRICE_ORACLE();
 
     // Connect to PriceOracle contract
     const priceOracleContract = new ethers.Contract(

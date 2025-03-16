@@ -49,7 +49,8 @@ export const RainbowKitCustomConnectButton = () => {
                   <div className="flex flex-col items-center mr-1">
                     <Balance address={account.address} className="min-h-0 h-auto" />
                     <span className="text-xs" style={{ color: networkColor }}>
-                      {chain.name}
+                      {/* @ts-ignore */}
+                      {"Scroll Sepolia" || chain.name}
                     </span>
                   </div>
                   <AddressInfoDropdown
