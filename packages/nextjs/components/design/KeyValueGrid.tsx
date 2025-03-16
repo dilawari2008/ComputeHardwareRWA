@@ -2,10 +2,11 @@ import React from "react";
 
 interface KeyValuePair {
   key: string;
-  value: string | number | undefined;
+  value: any;
   onClick?: () => void;
   icon?: React.ReactNode;
   important?: boolean;
+  separator?: boolean;
 }
 
 interface KeyValueGridProps {
@@ -20,12 +21,14 @@ const KeyValueGrid: React.FC<KeyValueGridProps> = ({ items, className = "" }) =>
         {items.map((item, index) => (
           <React.Fragment key={index}>
             <div
-              className={` text-left text-md ${item.important ? "font-bold text-black" : "font-medium text-gray-400"}`}
+              className={`text-left text-md ${item.important ? "font-bold text-black underline" : "font-medium text-gray-400"}`}
             >
               {item.key}
             </div>
             <div
-              className={`text-left text-md cursor-pointer ${item.important ? "font-bold text-black" : ""}`}
+              className={`text-left text-md cursor-pointer ${
+                item.important ? "font-bold text-black" : item.separator ? "text-gray-400" : ""
+              }`}
               // @ts-ignore
               onClick={item.onClick ? () => item.onClick() : undefined}
             >
