@@ -33,10 +33,12 @@ const ApproveForSaleModal = ({ hardware, onClose }: any) => {
         userAddress: address,
       });
 
+      // @ts-ignore
       const signTxn = await signAndSendTransaction(window.ethereum, response?.data?.tx);
 
       if (signTxn) {
         console.log("transaction signed successfully");
+        // @ts-ignore
         console.log("Token Approval TX:", response?.data?.tx);
 
         const fractionalizeResponse = await Api.post("/get-fractionalize-tokens-tx", {
@@ -45,6 +47,7 @@ const ApproveForSaleModal = ({ hardware, onClose }: any) => {
           userAddress: address,
         });
 
+        // @ts-ignore
         const signTxnFractionalize = await signAndSendTransaction(window.ethereum, fractionalizeResponse?.data?.tx);
         console.log("Fractionalize Tokens TX:", signTxnFractionalize);
       }

@@ -38,7 +38,9 @@ export const HardwareActionPanel = ({ refetch }: any) => {
         userAddress: address,
       });
 
+      // @ts-ignore
       if (response?.data?.tx) {
+        // @ts-ignore
         const signTxn = await signAndSendTransaction(window.ethereum, response?.data?.tx);
 
         if (signTxn) {

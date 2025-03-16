@@ -24,7 +24,8 @@ const Marketplace = () => {
     const fetchHardware = async () => {
       try {
         const data = await Api.get("/listing");
-        setHardware(data?.data); // Assuming the API returns an array of Hardware objects
+        // @ts-ignore
+        setHardware(data?.data || []); // Assuming the API returns an array of Hardware objects
       } catch (err) {
         setError("Failed to fetch hardware listings. Please try again later.");
         console.error("Error fetching hardware:", err);

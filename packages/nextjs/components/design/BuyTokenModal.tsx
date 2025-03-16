@@ -32,7 +32,9 @@ const BuyTokenModal = ({ hardware, onClose }: any) => {
         userAddress: address,
       });
 
+      // @ts-ignore
       console.log("Buy Tokens TX:", response?.data?.tx);
+      // @ts-ignore
       const signTxn = await signAndSendTransaction(window.ethereum, response?.data?.tx);
       if (signTxn) {
         toast.success("Tokens purchased successfully!");

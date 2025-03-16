@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "react-hot-toast";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import Modal from "~~/components/design/Modal";
@@ -17,7 +18,7 @@ export default function Deploy() {
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<string>(``);
   const [hoursModalOpen, setHoursModalOpen] = useState(false);
-  const [deploymentDetails, setDeploymentDetails] = useState();
+  const [deploymentDetails, setDeploymentDetails] = useState<any>(null);
   const handleDeploy = async () => {
     console.log("set deploy");
     setHoursModalOpen(false);
@@ -103,7 +104,7 @@ export default function Deploy() {
 
   function timeAgo(date: any) {
     const now = new Date();
-    const timeDifference = now - new Date(date); // difference in milliseconds
+    const timeDifference = now.getTime() - new Date(date).getTime(); // difference in milliseconds
 
     const seconds = Math.floor(timeDifference / 1000); // convert to seconds
     const minutes = Math.floor(seconds / 60); // convert to minutes

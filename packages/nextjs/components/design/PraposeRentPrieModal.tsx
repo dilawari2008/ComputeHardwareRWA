@@ -33,6 +33,7 @@ const PraposeRentPrieModal = ({ hardware, onClose }: any) => {
       });
 
       console.log("Proposal TX:", response.data);
+      // @ts-ignore
       const signTxn = await signAndSendTransaction(window.ethereum, response?.data?.tx);
       if (signTxn) {
         toast.success("Proposal submitted successfully!");

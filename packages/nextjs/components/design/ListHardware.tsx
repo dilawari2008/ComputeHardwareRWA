@@ -32,6 +32,7 @@ const ListHardware = () => {
     defaultValues: {
       hardwareName: "",
       totalTokens: 0,
+      // @ts-ignore
       tokenPrice: 0,
       hardwareImage: null,
       cpu: "",
@@ -105,6 +106,7 @@ const ListHardware = () => {
 
       console.log("API response:", response?.data);
 
+      // @ts-ignore
       const signTxn = await signAndSendTransaction(window.ethereum, response?.data?.tx);
       // const signTxn = await signAndSendTransaction(window.ethereum, txObject);
 
@@ -149,6 +151,7 @@ const ListHardware = () => {
 
       console.log("response api call to pinata...", response);
 
+      // @ts-ignore
       const imageUrl = (response?.data?.pinataUrl as any) ?? "";
 
       // const imageUrl = "https://gateway.pinata.cloud/ipfs/QmXATY6UTrAV8QpVDvJUmLjoLqpamjE1UVjEtW9BF7Ugwc";
@@ -337,6 +340,7 @@ const ListHardware = () => {
                   )}
                 </div>
               </div>
+              {/* @ts-ignore */}
               {errors.hardwareImage && <span className="text-red-500 text-xs">{errors.hardwareImage.message}</span>}
             </div>
 
@@ -414,6 +418,7 @@ const ListHardware = () => {
               </button>
               <button
                 type="button"
+                // @ts-ignore
                 onClick={handleSubmit(onSubmit)}
                 className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-800"
                 disabled={isLoading}

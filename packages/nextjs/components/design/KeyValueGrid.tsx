@@ -26,6 +26,7 @@ const KeyValueGrid: React.FC<KeyValueGridProps> = ({ items, className = "" }) =>
             </div>
             <div
               className={`text-left text-md cursor-pointer ${item.important ? "font-bold text-black" : ""}`}
+              // @ts-ignore
               onClick={item.onClick ? () => item.onClick() : undefined}
             >
               {item.value || "N/A"}
