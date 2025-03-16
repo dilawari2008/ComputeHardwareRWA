@@ -73,7 +73,7 @@ const ListHardware = () => {
         hardwareName: data.hardwareName,
         totalTokens: data.totalTokens,
         tokenPrice: Number(data.tokenPrice),
-        rentalPrice: 0.02,
+        rentalPrice: 0.0002,
         imageUrl: imagePreview,
         cpu: data.cpu,
         memory: data.memory,

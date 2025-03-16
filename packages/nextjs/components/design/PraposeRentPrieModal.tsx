@@ -96,9 +96,7 @@ const PraposeRentPrieModal = ({ hardware, onClose }: any) => {
           type="number"
           id="tokenAmount"
           name="tokenAmount"
-          min="0.01" // Minimum reasonable rental price
-          step="0.01"
-          value={newRentalPrice}
+          value={Number(averageCpuUtilization) ? newRentalPrice : (Number(newRentalPrice) * 2).toString()}
           onChange={e => setNewRentalPrice(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Enter rental price"
@@ -116,16 +114,20 @@ const PraposeRentPrieModal = ({ hardware, onClose }: any) => {
             key: "Smart Price Suggestion",
             value: isLoadingPrice ? (
               <div className="w-16 h-5 bg-gray-200 animate-pulse rounded"></div>
-            ) : (
+            ) : Number(averageCpuUtilization) ? (
               `${rentalPrice} ETH / day`
+            ) : (
+              "--"
             ),
           },
           {
             key: "Average CPU Utilization",
             value: isLoadingCpu ? (
               <div className="w-16 h-5 bg-gray-200 animate-pulse rounded"></div>
-            ) : (
+            ) : Number(averageCpuUtilization) ? (
               `${averageCpuUtilization} %`
+            ) : (
+              "--"
             ),
           },
           { key: "------------------------------------", value: "------------------------------", separator: true },
