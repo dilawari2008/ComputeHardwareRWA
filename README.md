@@ -2,6 +2,10 @@
 
 ## Overview
 
+
+![Screenshot 2025-03-17 at 11 33 57 PM](https://github.com/user-attachments/assets/5417c57d-9996-43b8-852c-f3bf122e1155)
+
+
 This project is used to fractionalize expensive compute hardware, which implies:
 1. Hardwares such as GPUs, ASICs, etc. can be owned and fractionalized among multiple users.
 2. The fractional owners can sell their fractional ownership on the open market.
